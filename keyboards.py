@@ -10,14 +10,14 @@ def to_superscript(num_str):
 
 def generate_month_name(month, language):
     months = {
-        'en': ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
-        'ru': ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"],
-        'es': ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
-        'fr': ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"],
-        'uk': ["Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень", "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"],
-        'pl': ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Październik", "Listopад", "Grudzień"],
-        'de': ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
-        'it': ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"]
+        'en': ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    'ru': ["Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"],
+    'es': ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+    'fr': ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Aoû", "Sep", "Oct", "Nov", "Déc"],
+    'uk': ["Січ", "Лют", "Бер", "Кві", "Тра", "Чер", "Лип", "Сер", "Вер", "Жов", "Лис", "Гру"],
+    'pl': ["Sty", "Lut", "Mar", "Kwi", "Maj", "Cze", "Lip", "Sie", "Wrz", "Paź", "Lis", "Gru"],
+    'de': ["Jan", "Feb", "Mär", "Apr", "Mai", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dez"],
+    'it': ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"]
     }
     return months[language][month - 1]
 
@@ -302,7 +302,7 @@ def yes_no_keyboard(language):
     return InlineKeyboardMarkup(keyboard)
 
 def generate_person_selection_keyboard(language):
-    person_buttons = [InlineKeyboardButton(f"🟢 {i}", callback_data=f'person_{i}') for i in range(2, 21)]
+    person_buttons = [InlineKeyboardButton(f" {i}", callback_data=f'person_{i}') for i in range(2, 22)]
     num_buttons_per_row = 5
     rows = [person_buttons[i:i + num_buttons_per_row] for i in range(0, len(person_buttons), num_buttons_per_row)]
     return InlineKeyboardMarkup(rows)
@@ -310,60 +310,58 @@ def generate_person_selection_keyboard(language):
 def generate_party_styles_keyboard(language):
     styles = {
         'en': [
-            ("🟢 Corporate", "🟢 Breakfast on the beach"),
-            ("🟢 Gender reveal", "🟢 Dinner by candlelight"),
-            ("🟢 Romantic meeting", "🟢 Wedding anniversary"),
-            ("🟢 Child's birthday", "🟢 Bachelorette party"),
-            ("🟢 Adult's birthday", "🟢 Gift certificate")
+            ("Corporate", "Breakfast on the beach"),
+            ("Gender reveal", "Dinner by candlelight"),
+            ("Romantic meeting", "Wedding anniversary"),
+            ("Child's birthday", "Bachelorette party"),
+            ("Adult's birthday", "Gift certificate")
         ],
         'ru': [
-            ("🟢 Девичник", "🟢 Романтическая встреча"),
-            ("🟢 Корпоратив", "🟢 Подарочный сертификат"),
-            ("🟢 Раскрытие пола", "🟢 Взрослый день рождения"),
-            ("🟢 Годовщина свадьбы", "🟢 Детский день рождения"),
-            ("🟢 Ужин при свечах", "🟢 Завтрак на пляже")
+            ("Девичник", "Романтическая встреча"),
+            ("Корпоратив", "Подарочный сертификат"),
+            ("Раскрытие пола", "Взрослый день рождения"),
+            ("Годовщина свадьбы", "Детский день рождения"),
+            ("Ужин при свечах", "Завтрак на пляже")
         ],
         'es': [
-            ("🟢 Corporativo", "🟢 Cena a la luz de las velas"),
-            ("🟢 Cumpleaños adulto", "🟢 Certificado de regalo"),
-            ("🟢 Encuentro romántico", "🟢 Desayuno en la playa"),
-            ("🟢 Aniversario de bodas", "🟢 Despedida de soltera"),
-            ("🟢 Revelación de sexo", "🟢 Cumpleaños infantil")
+            ("Corporativo", "Cena a la luz de las velas"),
+            ("Cumpleaños adulto", "Certificado de regalo"),
+            ("Encuentro romántico", "Desayuno en la playa"),
+            ("Aniversario de bodas", "Despedida de soltera"),
+            ("Revelación de sexo", "Cumpleaños infantil")
         ],
         'fr': [
-            ("🟢 Corporatif", "🟢 Enterrement de vie de jeune fille"),
-            ("🟢 Certificat cadeau", "🟢 Petit déjeuner sur la plage"),
-            ("🟢 Anniversaire adulte", "🟢 Anniversaire de mariage"),
-            ("🟢 Révélation de sexe", "🟢 Dîner aux chandelles"),
-            ("🟢 Rencontre romantique", "🟢 Anniversaire d'enfant")
-        ],
+            ("Corporatif", "Enterrement de vie de jeune fille"),
+            ("Certificat cadeau", "Petit déjeuner sur la plage"),
+            ("Anniversaire adulte", "Anniversaire de mariage"),
+            ("Révélation de sexe", "Dîner aux chandelles"),
+            ("Rencontre romantique", "Anniversaire d'enfant")        ],
         'uk': [
-            ("🟢 Корпоратив", "🟢 Дорослий день народження"),
-            ("🟢 Дівич-вечір", "🟢 Подарунковий сертифікат"),
-            ("🟢 Розкриття статі", "🟢 Дитячий день народження"),
-            ("🟢 Річниця весілля", "🟢 Романтична зустріч"),
-            ("🟢 Сніданок на пляжі", "🟢 Вечеря при свічках")
-        ],
+            ("Корпоратив", "Дорослий день народження"),
+            ("Дівич-вечір", "Подарунковий сертифікат"),
+            ("Розкриття статі", "Дитячий день народження"),
+            ("Річниця весілля", "Романтична зустріч"),
+            ("Сніданок на пляжі", "Вечеря при свічках")        ],
         'pl': [
-            ("🟢 Korporacyjny", "🟢 Kolacja przy świecach"),
-            ("🟢 Bon upominkowy", "🟢 Romantyczne spotkanie"),
-            ("🟢 Rocznica ślubu", "🟢 Dziecięce urodziny"),
-            ("🟢 Ujawnienie płci", "🟢 Śniadanie na plaży"),
-            ("🟢 Dorosłe urodziny", "🟢 Wieczór panieński")
+            ("Korporacyjny", "Kolacja przy świecach"),
+            ("Bon upominkowy", "Romantyczne spotkanie"),
+            ("Rocznica ślubu", "Dziecięce urodziny"),
+            ("Ujawnienie płci", "Śniadanie na plaży"),
+            ("Dorosłe urodziny", "Wieczór panieński")
         ],
         'de': [
-            ("🟢 Jubiläum", "🟢 Junggesellinnenabschied"),
-            ("🟢 Firmenfeier", "🟢 Abendessen bei Kerzenschein"),
-            ("🟢 Sternenabend", "🟢 Geschlechtsenthüllung"),
-            ("🟢 Geschenkgutschein", "🟢 Romantisches Treffen"),
-            ("🟢 Kindergeburtstag", "🟢 Frühstück am Strand")
+            ("Jubiläum", "Junggesellinnenabschied"),
+            ("Firmenfeier", "Abendessen bei Kerzenschein"),
+            ("Sternenabend", "Geschlechtsenthüllung"),
+            ("Geschenkgutschein", "Romantisches Treffen"),
+            ("Kindergeburtstag", "Frühstück am Strand")
         ],
         'it': [
-            ("🟢 Corporativo", "🟢 Festa di addio al nubilato"),
-            ("🟢 Incontro romantico", "🟢 Anniversario di matrimonio"),
-            ("🟢 Certificato regalo", "🟢 Colazione sulla spiaggia"),
-            ("🟢 Rivelazione del sesso", "🟢 Compleanno dell'adulto"),
-            ("🟢 Cena a lume di candela", "🟢 Compleanno del bambino")
+            ("Corporativo", "Festa di addio al nubilato"),
+            ("Incontro romantico", "Anniversario di matrimonio"),
+            ("Certificato regalo", "Colazione sulla spiaggia"),
+            ("Rivelazione del sesso", "Compleanno dell'adulto"),
+            ("Cena a lume di candela", "Compleanno del bambino")
         ]
     }
 

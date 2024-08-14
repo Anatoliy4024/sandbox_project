@@ -21,21 +21,6 @@ def generate_month_name(month, language):
     }
     return months[language][month - 1]
 
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton
-from datetime import datetime, timedelta
-import calendar
-
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton
-from datetime import datetime, timedelta
-import calendar
-
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton
-from datetime import datetime, timedelta
-import calendar
-
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton
-from datetime import datetime, timedelta
-import calendar
 
 
 def generate_calendar_keyboard(month_offset=0, language='en'):
@@ -246,15 +231,16 @@ def language_selection_keyboard():
     keyboard = [
         [
             InlineKeyboardButton("🇬🇧 EN", callback_data='lang_en'),
-            InlineKeyboardButton("🇷🇺 RU", callback_data='lang_ru'),
             InlineKeyboardButton("🇪🇸 ES", callback_data='lang_es'),
+            InlineKeyboardButton("🇮🇹 IT", callback_data='lang_it'),
             InlineKeyboardButton("🇫🇷 FR", callback_data='lang_fr')
         ],
         [
             InlineKeyboardButton("🇺🇦 UA", callback_data='lang_uk'),
             InlineKeyboardButton("🇵🇱 PL", callback_data='lang_pl'),
             InlineKeyboardButton("🇩🇪 DE", callback_data='lang_de'),
-            InlineKeyboardButton("🇮🇹 IT", callback_data='lang_it')
+            InlineKeyboardButton("🇷🇺 RU", callback_data='lang_ru')
+
         ]
     ]
     return InlineKeyboardMarkup(keyboard)

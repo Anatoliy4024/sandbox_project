@@ -38,41 +38,27 @@ def execute_query(conn, query, params=()):
             log_message(f"Error closing database connection: {e}")
 
 
-def execute_query_with_retry(query, params=(), user_data=None, max_retries=5):
+import time
+import sqlite3
+from database_logger import log_message
+
+def execute_query_with_retry(conn, query, params=(), max_retries=5):
     """Выполняет SQL-запрос с повторными попытками при блокировке базы данных."""
     retries = 0
-    conn = None
-
     while retries < max_retries:
         try:
-            conn = sqlite3.connect(DATABASE_PATH)
-            if conn is None:
-                log_message("Failed to create database connection")
-                return False
-
             cursor = conn.cursor()
-            log_query(query, params)  # Логирование запроса
             cursor.execute(query, params)
             conn.commit()
-            log_message(f"Query executed successfully with retry: {query} with params {params}")
-
-            # Использования user_data после успешного выполнения запроса
-            if user_data:
-                user_data.set_step('data_saved')  # Или другое обновление данных
-
-            return True
+            return
         except sqlite3.OperationalError as e:
             if "database is locked" in str(e):
                 retries += 1
                 log_message(f"Database is locked, retrying {retries}/{max_retries}")
                 time.sleep(1)  # Задержка перед повторной попыткой
             else:
-                log_message(f"Error executing query with retry: {e}")
-                return False
+                log_message(f"Error executing query: {e}")
+                raise e
         finally:
-            if conn:
-                try:
-                    conn.close()
-                    log_message("Database connection closed after retry")
-                except sqlite3.Error as e:
-                    log_message(f"Error closing database connection after retry: {e}")
+            if retries >= max_retries:
+                log_message(f"Failed to execute query after {max_retries} retries")

@@ -12,6 +12,7 @@ from keyboards import language_selection_keyboard, yes_no_keyboard, generate_cal
 from message_handlers import handle_message, handle_city_confirmation
 from constants import TemporaryData, DATABASE_PATH
 
+
 # Включаем логирование и указываем файл для логов
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -644,6 +645,7 @@ if __name__ == '__main__':
                 new_row.append(InlineKeyboardButton(button.text, callback_data='none'))
             new_keyboard.append(new_row)
         return InlineKeyboardMarkup(new_keyboard)
+
 
 
     logging.basicConfig(level=logging.DEBUG)

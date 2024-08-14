@@ -57,7 +57,6 @@ async def handle_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Создайте соединение с базой данных
     conn = create_connection(DATABASE_PATH)
     if conn is not None:
-        #____________________________________________________________________________________________
         try:
             # Проверка существования пользователя
             logging.info(f"Проверка существования пользователя с user_id: {update.message.from_user.id}")
@@ -70,37 +69,26 @@ async def handle_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 # Обновление данных пользователя
                 logging.info(f"Обновление данных пользователя: {user_data.get_username()}")
                 update_query = "UPDATE users SET username = ?, language = ?, user_name = ? WHERE user_id= ?"
-                update_params = (user_data.get_username(), user_data.get_language(),user_data.get_name(), update.message.from_user.id)
-                execute_query_with_retry(update_query, update_params)
+                update_params = (user_data.get_username(), user_data.get_language(), user_data.get_name(), update.message.from_user.id)
+                execute_query_with_retry(conn, update_query, update_params)
             else:
                 # Вставка нового пользователя
                 logging.info(f"Вставка нового пользователя: {user_data.get_username()}")
-                insert_query = "INSERT INTO users (user_id, username, language,user_name) VALUES (?, ?, ?,?)"
-                insert_params = (update.message.from_user.id, user_data.get_username(), user_data.get_language(),user_data.get_name())
-                execute_query_with_retry(insert_query, insert_params)
+                insert_query = "INSERT INTO users (user_id, username, language, user_name) VALUES (?, ?, ?, ?)"
+                insert_params = (update.message.from_user.id, user_data.get_username(), user_data.get_language(), user_data.get_name())
+                execute_query_with_retry(conn, insert_query, insert_params)
+
+            # Теперь сохраняем user_id в таблицу orders
+            save_user_id_to_orders(update.message.from_user.id)
+            print(f"Принт 9: user_id {update.message.from_user.id} сохранен в таблицу orders")
 
         except Exception as e:
             logging.error(f"Ошибка базы данных: {e}")
         finally:
             conn.close()
             logging.info("Соединение с базой данных закрыто")
-            #_______________________________________________________________
     else:
         logging.error("Не удалось создать соединение с базой данных")
-
-    # Сохранение в базу данных
-    # conn = create_connection(DATABASE_PATH)
-    # if conn is not None:
-    #     print("Принт 9: Соединение с базой данных установлено")
-    #     query = """
-    #     INSERT INTO users (user_id, language, user_name, username)
-    #     VALUES (?, ?, ?, ?)
-    #     """
-    #     params = (update.message.from_user.id, language_code, user_data.get_name(), user_data.get_username())
-    #     execute_query_with_retry(query, params)
-    #     print(f"Принт 10: Выполнен запрос INSERT с параметрами: {params}")
-    # else:
-    #     print("Принт 11: Не удалось создать соединение с базой данных")
 
     greeting_texts = {
         'en': f'Hello {user_data.get_name()}! Do you want to see available dates?',
@@ -260,6 +248,36 @@ translations = {
     'uk': "Будь ласка, використовуйте кнопки",
     'pl': "Proszę użyć przycisków"
 }
+
+def save_user_id_to_orders(user_id):
+    """Сохраняет user_id в таблицу orders."""
+    conn = create_connection(DATABASE_PATH)
+    if conn is not None:
+        try:
+            logging.info(f"Проверка существования записи в orders для user_id: {user_id}")
+            select_query = "SELECT 1 FROM orders WHERE user_id = ?"
+            cursor = conn.cursor()
+            cursor.execute(select_query, (user_id,))
+            exists = cursor.fetchone()
+
+            if exists:
+                logging.info(f"Запись для user_id {user_id} уже существует в таблице orders.")
+            else:
+                logging.info(f"Вставка нового user_id {user_id} в таблицу orders.")
+                insert_query = "INSERT INTO orders (user_id) VALUES (?)"
+                cursor.execute(insert_query, (user_id,))
+                conn.commit()
+                logging.info(f"user_id {user_id} успешно добавлен в таблицу orders.")
+
+        except Exception as e:
+            logging.error(f"Ошибка базы данных при работе с таблицей orders: {e}")
+        finally:
+            conn.close()
+            logging.info("Соединение с базой данных закрыто")
+    else:
+        logging.error("Не удалось создать соединение с базой данных для работы с таблицей orders")
+
+
 
 # Функция для получения перевода на основе языка пользователя
 def get_translation(user_data, key):

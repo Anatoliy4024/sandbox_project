@@ -250,7 +250,7 @@ translations = {
 }
 
 def save_user_id_to_orders(user_id):
-    """Сохраняет user_id в таблицу orders."""
+    """Сохраняет user_id в таблицу orders с начальным значением null для даты."""
     conn = create_connection(DATABASE_PATH)
     if conn is not None:
         try:
@@ -263,11 +263,11 @@ def save_user_id_to_orders(user_id):
             if exists:
                 logging.info(f"Запись для user_id {user_id} уже существует в таблице orders.")
             else:
-                logging.info(f"Вставка нового user_id {user_id} в таблицу orders.")
-                insert_query = "INSERT INTO orders (user_id) VALUES (?)"
-                cursor.execute(insert_query, (user_id,))
+                logging.info(f"Вставка нового user_id {user_id} с null датой в таблицу orders.")
+                insert_query = "INSERT INTO orders (user_id, selected_date) VALUES (?, ?)"
+                cursor.execute(insert_query, (user_id, None))  # Передаем None для заполнения null в базе данных
                 conn.commit()
-                logging.info(f"user_id {user_id} успешно добавлен в таблицу orders.")
+                logging.info(f"user_id {user_id} успешно добавлен в таблицу orders с null датой.")
 
         except Exception as e:
             logging.error(f"Ошибка базы данных при работе с таблицей orders: {e}")

@@ -353,6 +353,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif query.data.startswith('date_'):
         selected_date = query.data.split('_')[1]
+        print(f"Принт: Выбрана дата - {selected_date}")
         user_data.set_step('date_confirmation')
         user_data.set_date(selected_date)
 

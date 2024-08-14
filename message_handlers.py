@@ -26,6 +26,35 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=get_current_step_keyboard(step, user_data)
         )
 
+from telegram import Update
+from telegram.ext import ContextTypes
+from keyboards import yes_no_keyboard, generate_calendar_keyboard, generate_time_selection_keyboard, generate_person_selection_keyboard, generate_party_styles_keyboard
+from constants import UserData
+import logging
+
+from abstract_functions import create_connection, execute_query, execute_query_with_retry
+from constants import TemporaryData, DATABASE_PATH
+
+
+# Обработчик текстовых сообщений
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_data = context.user_data.get('user_data', UserData())
+    context.user_data['user_data'] = user_data
+    step = user_data.get_step()
+
+    if step == 'greeting':
+        await handle_name(update, context)
+    elif step == 'preferences_request':
+        await handle_preferences(update, context)
+    elif step == 'city_request':
+        await handle_city(update, context)
+    else:
+        await update.message.reply_text(
+            get_translation(user_data, 'buttons_only'),  # Используем функцию для получения перевода
+            reply_markup=get_current_step_keyboard(step, user_data)
+        )
+
+
 async def handle_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Инициализация данных пользователя
     user_data = context.user_data.get('user_data', UserData())
@@ -115,6 +144,87 @@ async def handle_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
     print("Принт 14: Конец функции handle_name")
+
+
+def save_user_id_to_orders(user_id):
+    """Сохраняет user_id в таблицу orders и присваивает null полям, которые будут заполнены позже."""
+    conn = create_connection(DATABASE_PATH)
+    if conn is not None:
+        try:
+            logging.info(f"Проверка существования записи в orders для user_id: {user_id}")
+            select_query = "SELECT 1 FROM orders WHERE user_id = ?"
+            cursor = conn.cursor()
+            cursor.execute(select_query, (user_id,))
+            exists = cursor.fetchone()
+
+            if exists:
+                logging.info(f"Запись для user_id {user_id} уже существует в таблице orders.")
+            else:
+                logging.info(f"Вставка нового user_id {user_id} в таблицу orders.")
+                insert_query = """
+                    INSERT INTO orders (user_id, selected_date, start_time, end_time, duration, people_count, selected_party_style, city, preferences, status)
+                    VALUES (?, null, null, null, null, null, null, null, null, null)
+                """
+                cursor.execute(insert_query, (user_id,))
+                conn.commit()
+                logging.info(f"user_id {user_id} успешно добавлен в таблицу orders с null для полей.")
+
+        except Exception as e:
+            logging.error(f"Ошибка базы данных при работе с таблицей orders: {e}")
+        finally:
+            conn.close()
+            logging.info("Соединение с базой данных закрыто")
+    else:
+        logging.error("Не удалось создать соединение с базой данных для работы с таблицей orders")
+
+
+# Функция для обработки выбора даты
+async def handle_date_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Обрабатывает выбор даты пользователем и обновляет поле start_time в таблице orders."""
+    user_id = update.callback_query.from_user.id
+    selected_date = update.callback_query.data.split('_')[1]  # Извлекаем выбранную дату из callback_data
+
+    update_order_date(user_id, selected_date)
+    print(f"Дата {selected_date} обновлена в таблице orders для user_id {user_id}")
+
+    await update.callback_query.message.reply_text(f"Вы выбрали дату: {selected_date}")
+
+
+def update_order_date(user_id, start_time):
+    """Обновляет дату в таблице orders для указанного user_id."""
+    conn = create_connection(DATABASE_PATH)
+    if conn is not None:
+        try:
+            logging.info(f"Обновление записи в orders для user_id: {user_id} с датой: {start_time}")
+            update_query = "UPDATE orders SET start_time = ? WHERE user_id = ?"
+            execute_query_with_retry(conn, update_query, (start_time, user_id))
+            logging.info(f"Принт: Дата {start_time} успешно обновлена для user_id {user_id}")
+            logging.info(f"Дата {start_time} успешно обновлена для user_id {user_id}")
+            print(f"Принт: Дата {start_time} успешно обновлена для user_id {user_id}")
+        except Exception as e:
+            logging.error(f"Ошибка базы данных при обновлении даты в таблице orders: {e}")
+        finally:
+            conn.close()
+            logging.info("Соединение с базой данных закрыто")
+    else:
+        logging.error("Не удалось создать соединение с базой данных для работы с таблицей orders")
+
+
+# Словарь с переводами сообщения "Выбор только кнопками" на разные языки
+translations = {
+    'en': "Please use the buttons",
+    'ru': "Выбор только кнопками",
+    'es': "Por favor, usa los botones",
+    'fr': "Veuillez utiliser les boutons",
+    'de': "Bitte verwenden Sie die Tasten",
+    'it': "Si prega di utilizzare i pulsanti",
+    'uk': "Будь ласка, використовуйте кнопки",
+    'pl': "Proszę użyć przycisków"
+}
+
+def get_translation(user_data, key):
+    language_code = user_data.get_language()  # Получаем код языка пользователя
+    return translations.get(language_code, translations['en'])  # Возвращаем перевод или английский по умолчанию
 
 
 

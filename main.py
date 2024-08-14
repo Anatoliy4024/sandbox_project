@@ -9,7 +9,7 @@ import sqlite3
 from constants import UserData, time_selection_headers, people_selection_headers, party_styles_headers, time_set_texts
 from database_logger import log_message, log_query
 from keyboards import language_selection_keyboard, yes_no_keyboard, generate_calendar_keyboard, generate_time_selection_keyboard, generate_person_selection_keyboard, generate_party_styles_keyboard
-from message_handlers import handle_message, handle_city_confirmation
+from message_handlers import handle_message, handle_city_confirmation, update_order_date, handle_name
 from constants import TemporaryData, DATABASE_PATH
 
 
@@ -356,6 +356,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print(f"Принт: Выбрана дата - {selected_date}")
         user_data.set_step('date_confirmation')
         user_data.set_date(selected_date)
+        update_order_date(user_data.user_id, selected_date)
 
         # Меняем цвет кнопки на красный и делаем все остальные кнопки неактивными
         await query.edit_message_reply_markup(

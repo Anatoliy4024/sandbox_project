@@ -3,6 +3,8 @@ from telegram.ext import ContextTypes
 from keyboards import yes_no_keyboard, generate_calendar_keyboard, generate_time_selection_keyboard, generate_person_selection_keyboard, generate_party_styles_keyboard
 from constants import UserData
 import logging
+from datetime import datetime
+
 
 from abstract_functions import create_connection, execute_query, execute_query_with_retry
 from constants import TemporaryData, DATABASE_PATH
@@ -196,11 +198,12 @@ def update_order_date(user_id, start_time):
     if conn is not None:
         try:
             logging.info(f"Обновление записи в orders для user_id: {user_id} с датой: {start_time}")
-            update_query = "UPDATE orders SET start_time = ? WHERE user_id = ?"
-            execute_query_with_retry(conn, update_query, (start_time, user_id))
+            date_object = datetime.strptime(start_time, "%Y-%m-%d")
+            update_query = "UPDATE orders SET selected_date = ? WHERE user_id = ?"
+            execute_query_with_retry(conn, update_query, (date_object, user_id))
             logging.info(f"Принт: Дата {start_time} успешно обновлена для user_id {user_id}")
             logging.info(f"Дата {start_time} успешно обновлена для user_id {user_id}")
-            print(f"Принт: Дата {start_time} успешно обновлена для user_id {user_id}")
+            print(f"Принт: +++++++++++++++++++Дата {start_time} успешно обновлена для user_id {user_id}")
         except Exception as e:
             logging.error(f"Ошибка базы данных при обновлении даты в таблице orders: {e}")
         finally:

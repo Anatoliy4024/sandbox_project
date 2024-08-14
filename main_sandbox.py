@@ -13,6 +13,9 @@ logging.basicConfig(
 # Ваш токен
 BOT_TOKEN = '7365546887:AAFimfH_lZxsv-v2RyaSktBRk7ww_s5Vs0U'
 
+# Словарь для замены обычных цифр на надстрочные
+SUPERSCRIPT_NUMBERS = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
+
 # Генерация кнопок календаря
 def generate_calendar_buttons(year, month, selected_day=None, disable=False):
     now = datetime.now()
@@ -32,11 +35,13 @@ def generate_calendar_buttons(year, month, selected_day=None, disable=False):
                 buttons[row].append(InlineKeyboardButton(" ", callback_data="none"))
             elif day <= num_days:
                 if year == current_year and month == current_month and day <= today:
-                    buttons[row].append(InlineKeyboardButton(f"🔴 {day}", callback_data="none"))
+                    day_text = str(day).translate(SUPERSCRIPT_NUMBERS)  # Преобразование цифры в надстрочную
+                    buttons[row].append(InlineKeyboardButton(f"🔻 {day_text}", callback_data="none"))
                 elif str(day) == selected_day:
-                    buttons[row].append(InlineKeyboardButton(f"🔴 {day}", callback_data=f"day_{day}"))
+                    day_text = str(day).translate(SUPERSCRIPT_NUMBERS)  # Преобразование цифры в надстрочную
+                    buttons[row].append(InlineKeyboardButton(f"🔻 {day_text}", callback_data=f"day_{day}"))
                 else:
-                    text = f"🟢 {day}" if not disable else f"🟢 {day}"
+                    text = f" {day}" if not disable else f" {day}"
                     callback_data = f"day_{day}" if not disable else 'none'
                     buttons[row].append(InlineKeyboardButton(text, callback_data=callback_data))
                 day += 1

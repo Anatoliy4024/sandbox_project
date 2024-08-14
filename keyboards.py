@@ -84,7 +84,7 @@ def generate_calendar_keyboard(month_offset=0, language='en'):
     #calendar_buttons = []
 
     # Добавляем строку с названием месяца
-    #calendar_buttons.append([InlineKeyboardButton(f"{month_name} {first_of_month.year}", callback_data='none')])
+    calendar_buttons.append([InlineKeyboardButton(f"{month_name} {first_of_month.year}", callback_data='none')])
 
     # Добавляем дни недели в первую колонку
     calendar_buttons = [[InlineKeyboardButton(day, callback_data='none')] for day in days_of_week[language]]
@@ -119,31 +119,9 @@ def generate_calendar_keyboard(month_offset=0, language='en'):
 
     return InlineKeyboardMarkup(calendar_buttons)
 
-    #calendar_buttons.append([
-    #     InlineKeyboardButton("<", callback_data="prev_month" if not disable else "none"),
-    #     InlineKeyboardButton(f"{calendar.month_name[month]} {year}", callback_data="none"),
-    #     InlineKeyboardButton(">", callback_data="next_month" if not disable else "none")
-    # ])
-    #
-    # return buttons
-
-
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from datetime import datetime, timedelta
 import calendar
-
-def generate_month_name(month, language):
-    months = {
-        'en': ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
-        'ru': ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"],
-        'es': ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
-        'fr': ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"],
-        'uk': ["Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень", "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"],
-        'pl': ["Styczeń", "Luty", "Marzec", "Kwiecień", "Maj", "Czerwiec", "Lipiec", "Sierpień", "Wrzesień", "Paździerник", "Listopад", "Grudzień"],
-        'de': ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"],
-        'it': ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"]
-    }
-    return months[language][month - 1]
 
 def generate_calendar_keyboard(month_offset=0, language='en'):
     today = datetime.today()

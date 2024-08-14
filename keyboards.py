@@ -2,6 +2,12 @@ from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from datetime import datetime, timedelta
 import calendar
 
+def to_superscript(num_str):
+    """Конвертирует строку цифр в надстрочные цифры."""
+    superscript_map = str.maketrans('0123456789', '⁰¹²³⁴⁵⁶⁷⁸⁹')
+    return num_str.translate(superscript_map)
+
+
 def generate_month_name(month, language):
     months = {
         'en': ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
@@ -95,9 +101,9 @@ def generate_calendar_keyboard(month_offset=0, language='en'):
                 calendar_buttons[day].append(InlineKeyboardButton(" ", callback_data='none'))
             else:
                 if current_date <= today:
-                    calendar_buttons[day].append(InlineKeyboardButton(f"🔴 {current_date.day}", callback_data='none'))
+                    calendar_buttons[day].append(InlineKeyboardButton(f"🔻 {current_date.day}", callback_data='none'))
                 else:
-                    calendar_buttons[day].append(InlineKeyboardButton(f"🟢 {current_date.day}",
+                    calendar_buttons[day].append(InlineKeyboardButton(f" {current_date.day}",
                                                                       callback_data=f'date_{current_date.strftime("%Y-%m-%d")}'))
                 current_date += timedelta(days=1)
 
@@ -186,9 +192,11 @@ def generate_calendar_keyboard(month_offset=0, language='en'):
                 calendar_buttons[day].append(InlineKeyboardButton(" ", callback_data='none'))
             else:
                 if current_date <= today:
-                    calendar_buttons[day].append(InlineKeyboardButton(f"🔴 {current_date.day}", callback_data='none'))
+                    # Используем to_superscript для преобразования дня в надстрочные цифры
+                    day_text = to_superscript(str(current_date.day))
+                    calendar_buttons[day].append(InlineKeyboardButton(f"🔻 {day_text}", callback_data='none'))
                 else:
-                    calendar_buttons[day].append(InlineKeyboardButton(f"🟢 {current_date.day}",
+                    calendar_buttons[day].append(InlineKeyboardButton(f" {current_date.day}",
                                                                       callback_data=f'date_{current_date.strftime("%Y-%m-%d")}'))
                 current_date += timedelta(days=1)
 
@@ -200,7 +208,6 @@ def generate_calendar_keyboard(month_offset=0, language='en'):
     calendar_buttons.append([prev_month_button, month_name_button, next_month_button])
 
     return InlineKeyboardMarkup(calendar_buttons)
-
 
 def generate_time_selection_keyboard(language, stage='start', start_time=None):
     start_time_dt = datetime.strptime('08:00', '%H:%M')
@@ -214,14 +221,14 @@ def generate_time_selection_keyboard(language, stage='start', start_time=None):
         if stage == 'end' and start_time:
             start_time_dt = datetime.strptime(start_time, '%H:%M')
             if current_time < start_time_dt + timedelta(hours=2):
-                time_buttons.append(InlineKeyboardButton(f"🔴 {time_str}", callback_data='none'))
+                time_buttons.append(InlineKeyboardButton(f"🔻 {time_str}", callback_data='none'))
             else:
-                time_buttons.append(InlineKeyboardButton(f"🟢 {time_str}", callback_data=f'time_{time_str}'))
+                time_buttons.append(InlineKeyboardButton(f" {time_str}", callback_data=f'time_{time_str}'))
         else:
             if current_time >= datetime.strptime('20:30', '%H:%M'):
-                time_buttons.append(InlineKeyboardButton(f"🔴 {time_str}", callback_data='none'))
+                time_buttons.append(InlineKeyboardButton(f"🔻 {time_str}", callback_data='none'))
             else:
-                time_buttons.append(InlineKeyboardButton(f"🟢 {time_str}", callback_data=f'time_{time_str}'))
+                time_buttons.append(InlineKeyboardButton(f" {time_str}", callback_data=f'time_{time_str}'))
         current_time += timedelta(minutes=30)
 
     num_buttons_per_row = 3

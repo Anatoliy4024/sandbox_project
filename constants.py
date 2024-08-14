@@ -7,36 +7,72 @@ DATABASE_PATH = os.path.join(os.path.dirname(__file__), 'sqlite.db')
 time_selection_headers = {
     'start': {
         'en': "Select start and end time (minimum duration 2 hours)",
-        'ru': "Выберите начальное и конечное время (минимальная продолжительность 2 часа)"
+        'ru': "Выберите начальное и конечное время (минимальная продолжительность 2 часа)",
+        'es': "Seleccione la hora de inicio y fin (duración mínima de 2 horas)",
+        'fr': "Sélectionnez l'heure de début et de fin (durée minimale de 2 heures)",
+        'uk': "Виберіть час початку та закінчення (мінімальна тривалість 2 години)",
+        'pl': "Wybierz czas rozpoczęcia i zakończenia (minimalny czas trwania 2 godziny)",
+        'de': "Wählen Sie Start- und Endzeit (Mindestdauer 2 Stunden)",
+        'it': "Seleziona l'ora di inizio e di fine (durata minima di 2 ore)"
     },
     'end': {
         'en': "Select the end time",
-        'ru': "Выберите конечное время"
+        'ru': "Выберите конечное время",
+        'es': "Seleccione la hora de finalización",
+        'fr': "Sélectionnez l'heure de fin",
+        'uk': "Виберіть час закінчення",
+        'pl': "Wybierz czas zakończenia",
+        'de': "Wählen Sie die Endzeit",
+        'it': "Seleziona l'ora di fine"
     }
 }
 
 # Заголовки для выбора количества людей
 people_selection_headers = {
     'en': "How many people are attending?",
-    'ru': "Сколько человек будет присутствовать?"
+    'ru': "Сколько человек будет присутствовать?",
+    'es': "¿Cuántas personas asistirán?",
+    'fr': "Combien de personnes seront présentes?",
+    'uk': "Скільки людей буде присутніх?",
+    'pl': "Ile osób będzie obecnych?",
+    'de': "Wie viele Personen nehmen teil?",
+    'it': "Quante persone saranno presenti?"
 }
 
 # Заголовки для выбора стиля мероприятия
 party_styles_headers = {
     'en': "What style do you choose?",
-    'ru': "Какой стиль вы выбираете?"
+    'ru': "Какой стиль вы выбираете?",
+    'es': "¿Qué estilo eliges?",
+    'fr': "Quel style choisissez-vous?",
+    'uk': "Який стиль ви обираєте?",
+    'pl': "Jaki styl wybierasz?",
+    'de': "Welchen Stil wählen Sie?",
+    'it': "Che stile scegli?"
 }
 
 # Заголовки для выбора города
 city_selection_headers = {
     'en': "Select your city",
-    'ru': "Выберите ваш город"
+    'ru': "Выберите ваш город",
+    'es': "Seleccione su ciudad",
+    'fr': "Sélectionnez votre ville",
+    'uk': "Виберіть ваше місто",
+    'pl': "Wybierz swoje miasto",
+    'de': "Wählen Sie Ihre Stadt",
+    'it': "Seleziona la tua città"
 }
 
 # Заголовки для выбора предпочтений
 preferences_headers = {
     'en': "Please specify your preferences",
-    'ru': "Укажите ваши предпочтения"
+    'ru': "Укажите ваши предпочтения",
+    'es': "Especifique sus preferencias",
+    'fr': "Veuillez préciser vos préférences",
+    'uk': "Вкажіть ваші уподобання",
+    'pl': "Określ swoje preferencje",
+    'de': "Bitte geben Sie Ihre Vorlieben an",
+    'it': "Specifica le tue preferenze"
 }
 
 # Статусы пользователей

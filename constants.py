@@ -97,6 +97,7 @@ all_headers = {
     'preferences': preferences_headers
 }
 
+
 # Класс для хранения временных данных
 class TemporaryData:
     def __init__(self):
@@ -240,6 +241,7 @@ class UserData:
         self.start_time = None
         self.end_time = None
 
+
 # Другие константы и определения...
 
 time_set_texts = {
@@ -263,4 +265,10 @@ time_set_texts = {
         'de': 'Endzeit auf {} gesetzt. Bestätigen Sie Ihre Auswahl.',
         'it': 'L\'ora di fine è stata impostata su {}. Conferma la tua selezione.'
     }
+}
+
+ORDER_STATUS = {
+    "незаполнено": 1,
+    "заполнено для расчета": 2
+
 }

@@ -165,7 +165,7 @@ def save_user_id_to_orders(user_id):
                 logging.info(f"Вставка нового user_id {user_id} в таблицу orders.")
                 insert_query = """
                     INSERT INTO orders (user_id, selected_date, start_time, end_time, duration, people_count, selected_party_style, city, preferences, status)
-                    VALUES (?, null, null, null, null, null, null, null, null, null)
+                    VALUES (?, null, null, null, null, null, null, null, null, 1)
                 """
                 cursor.execute(insert_query, (user_id,))
                 conn.commit()
@@ -186,24 +186,46 @@ async def handle_date_selection(update: Update, context: ContextTypes.DEFAULT_TY
     user_id = update.callback_query.from_user.id
     selected_date = update.callback_query.data.split('_')[1]  # Извлекаем выбранную дату из callback_data
 
-    update_order_date(user_id, selected_date)
+    update_order_data(user_id, selected_date, "UPDATE orders SET selected_date = ? WHERE user_id = ?")
     print(f"Дата {selected_date} обновлена в таблице orders для user_id {user_id}")
 
     await update.callback_query.message.reply_text(f"Вы выбрали дату: {selected_date}")
 
 
-def update_order_date(user_id, start_time):
+# def update_order_date(user_id, start_time):
+#     """Обновляет дату в таблице orders для указанного user_id."""
+#     conn = create_connection(DATABASE_PATH)
+#     if conn is not None:
+#         try:
+#             logging.info(f"Обновление записи в orders для user_id: {user_id} с датой: {start_time}")
+#             date_object = datetime.strptime(start_time, "%Y-%m-%d")
+#             update_query = "UPDATE orders SET selected_date = ? WHERE user_id = ?"
+#             execute_query_with_retry(conn, update_query, (date_object, user_id))
+#             logging.info(f"Принт: Дата {start_time} успешно обновлена для user_id {user_id}")
+#             logging.info(f"Дата {start_time} успешно обновлена для user_id {user_id}")
+#             print(f"Принт: +++++++++++++++++++Дата {start_time} успешно обновлена для user_id {user_id}")
+#         except Exception as e:
+#             logging.error(f"Ошибка базы данных при обновлении даты в таблице orders: {e}")
+#         finally:
+#             conn.close()
+#             logging.info("Соединение с базой данных закрыто")
+#     else:
+#         logging.error("Не удалось создать соединение с базой данных для работы с таблицей orders")
+
+def update_order_data(user_id, object, query):
     """Обновляет дату в таблице orders для указанного user_id."""
     conn = create_connection(DATABASE_PATH)
     if conn is not None:
         try:
-            logging.info(f"Обновление записи в orders для user_id: {user_id} с датой: {start_time}")
-            date_object = datetime.strptime(start_time, "%Y-%m-%d")
-            update_query = "UPDATE orders SET selected_date = ? WHERE user_id = ?"
-            execute_query_with_retry(conn, update_query, (date_object, user_id))
-            logging.info(f"Принт: Дата {start_time} успешно обновлена для user_id {user_id}")
-            logging.info(f"Дата {start_time} успешно обновлена для user_id {user_id}")
-            print(f"Принт: +++++++++++++++++++Дата {start_time} успешно обновлена для user_id {user_id}")
+            logging.info(f"Обновление записи в orders для user_id: {user_id} с датой: {object}")
+            if isinstance(object,datetime):
+                object = datetime.strptime(object, "%Y-%m-%d")
+            elif isinstance(object,int):
+                object = object
+            execute_query_with_retry(conn, query, (object, user_id))
+            logging.info(f"Принт: Дата {object} успешно обновлена для user_id {user_id}")
+            logging.info(f"Дата {object} успешно обновлена для user_id {user_id}")
+            print(f"Принт: +++++++++++++++++++Дата {object} успешно обновлена для user_id {user_id}")
         except Exception as e:
             logging.error(f"Ошибка базы данных при обновлении даты в таблице orders: {e}")
         finally:
@@ -263,6 +285,8 @@ async def handle__name(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_preferences(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_data = context.user_data.get('user_data', UserData())
     user_data.set_preferences(update.message.text)
+    user_id = update.message.from_user.id if update.message else update.callback_query.from_user.id
+    update_order_data(user_id, update.message.text, "UPDATE orders SET preferences = ? WHERE user_id = ?")
     user_data.set_step('preferences_received')
     context.user_data['user_data'] = user_data
 
@@ -289,6 +313,9 @@ async def handle_preferences(update: Update, context: ContextTypes.DEFAULT_TYPE)
 async def handle_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_data = context.user_data.get('user_data', UserData())
     user_data.set_city(update.message.text)
+    user_id = update.message.from_user.id if update.message else update.callback_query.from_user.id
+    update_order_data(user_id, update.message.text, "UPDATE orders SET city = ? WHERE user_id = ?")
+
     context.user_data['user_data'] = user_data
 
     language_code = user_data.get_language()

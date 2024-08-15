@@ -6,10 +6,10 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, InputMe
 from telegram.ext import ApplicationBuilder, CallbackQueryHandler, CommandHandler, MessageHandler, ContextTypes, filters
 from abstract_functions import create_connection, execute_query, execute_query_with_retry
 import sqlite3
-from constants import UserData, time_selection_headers, people_selection_headers, party_styles_headers, time_set_texts
+from constants import UserData, time_selection_headers, people_selection_headers, party_styles_headers, time_set_texts,ORDER_STATUS
 from database_logger import log_message, log_query
 from keyboards import language_selection_keyboard, yes_no_keyboard, generate_calendar_keyboard, generate_time_selection_keyboard, generate_person_selection_keyboard, generate_party_styles_keyboard
-from message_handlers import handle_message, handle_city_confirmation, update_order_date, handle_name
+from message_handlers import handle_message, handle_city_confirmation, update_order_data, handle_name
 from constants import TemporaryData, DATABASE_PATH
 
 
@@ -356,7 +356,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print(f"Принт: Выбрана дата - {selected_date}")
         user_data.set_step('date_confirmation')
         user_data.set_date(selected_date)
-        update_order_date(user_data.user_id, selected_date)
+        update_order_data(user_data.user_id, selected_date, "UPDATE orders SET selected_date = ? WHERE user_id = ?")
 
         # Меняем цвет кнопки на красный и делаем все остальные кнопки неактивными
         await query.edit_message_reply_markup(
@@ -381,6 +381,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         selected_time = query.data.split('_')[1]
         if not user_data.get_start_time():
             user_data.set_start_time(selected_time)
+            update_order_data(user_data.user_id, selected_time, "UPDATE orders SET start_time = ? WHERE user_id = ?")
             await query.message.reply_text(
                 time_set_texts['start_time'].get(user_data.get_language(),
                                                  'Start time set to {}. Now select end time.').format(selected_time),
@@ -389,6 +390,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
         else:
             user_data.set_end_time(selected_time)
+            update_order_data(user_data.user_id, selected_time, "UPDATE orders SET end_time = ? WHERE user_id = ?")
             start_time = datetime.strptime(user_data.get_start_time(), '%H:%M')
             end_time = datetime.strptime(user_data.get_end_time(), '%H:%M')
             if (end_time - start_time).seconds >= 7200:
@@ -411,6 +413,8 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         selected_person = query.data.split('_')[1]
         user_data.set_step('people_confirmation')
         user_data.set_person_count(selected_person)
+        update_order_data(user_data.user_id, int(selected_person), "UPDATE orders SET people_count = ? WHERE user_id = ?")
+        update_order_data(user_data.user_id, ORDER_STATUS["заполнено для расчета"], "UPDATE orders SET status = ? WHERE user_id = ?")
 
         # Меняем цвет кнопки на красный и делаем все остальные кнопки неактивными
         await query.edit_message_reply_markup(
@@ -435,6 +439,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         selected_style = query.data.split('_')[1]
         user_data.set_step('style_confirmation')
         user_data.set_style(selected_style)
+        update_order_data(user_data.user_id, selected_style, "UPDATE orders SET selected_style = ? WHERE user_id = ?")
 
         # Меняем цвет кнопки на красный и делаем все остальные кнопки неактивными
         await query.edit_message_reply_markup(

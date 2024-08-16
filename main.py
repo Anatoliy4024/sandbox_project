@@ -129,29 +129,33 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     logging.info(f"Получен user_id: {user_id}, username: {username}, language: {user_data.get_language()}")
 
-    # Создайте соединение с базой данных
+    # Создаем новую запись в таблице orders с новым session_number
     conn = create_connection(DATABASE_PATH)
     if conn is not None:
         try:
-            # Проверка существования пользователя
-            logging.info(f"Проверка существования пользователя с user_id: {user_id}")
-            select_query = "SELECT 1 FROM users WHERE user_id = ?"
+            # Проверка текущего максимального session_number для user_id
+            select_query = "SELECT MAX(session_number) FROM orders WHERE user_id = ?"
             cursor = conn.cursor()
             cursor.execute(select_query, (user_id,))
-            exists = cursor.fetchone()
+            current_session = cursor.fetchone()[0]
 
-            if exists:
-                # Обновление данных пользователя
-                logging.info(f"Обновление данных пользователя: {username}")
-                update_query = "UPDATE users SET username = ? WHERE user_id= ?"
-                update_params = (username, user_data.get_language(), user_id)
-                execute_query_with_retry(conn, update_query, update_params)
+            if current_session is None:
+                new_session_number = 1
             else:
-                # Вставка нового пользователя
-                logging.info(f"Вставка нового пользователя: {username}")
-                insert_query = "INSERT INTO users (user_id, username) VALUES (?, ?)"
-                insert_params = (user_id, username, user_data.get_language())
-                execute_query_with_retry(conn, insert_query, insert_params)
+                new_session_number = current_session + 1
+
+            # Принт для отслеживания в терминале
+            print(f"Принт: Новый session_number для user_id {user_id} = {new_session_number}")
+
+            # Создаем новую запись в таблице orders
+            insert_query = """
+                INSERT INTO orders (user_id, session_number, selected_date, start_time, end_time, duration, people_count, selected_style, city, preferences, status)
+                VALUES (?, ?, null, null, null, null, null, null, null, null, 1)
+            """
+            cursor.execute(insert_query, (user_id, new_session_number))
+            conn.commit()
+
+            logging.info(f"Создана новая запись в таблице orders для user_id: {user_id} с session_number: {new_session_number}")
 
         except Exception as e:
             logging.error(f"Ошибка базы данных: {e}")

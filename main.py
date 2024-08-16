@@ -143,13 +143,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if exists:
                 # Обновление данных пользователя
                 logging.info(f"Обновление данных пользователя: {username}")
-                update_query = "UPDATE users SET username = ?, language = ? WHERE user_id= ?"
+                update_query = "UPDATE users SET username = ? WHERE user_id= ?"
                 update_params = (username, user_data.get_language(), user_id)
                 execute_query_with_retry(conn, update_query, update_params)
             else:
                 # Вставка нового пользователя
                 logging.info(f"Вставка нового пользователя: {username}")
-                insert_query = "INSERT INTO users (user_id, username, language) VALUES (?, ?, ?)"
+                insert_query = "INSERT INTO users (user_id, username) VALUES (?, ?)"
                 insert_params = (user_id, username, user_data.get_language())
                 execute_query_with_retry(conn, insert_query, insert_params)
 
@@ -202,7 +202,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         conn = create_connection(DATABASE_PATH)
         if conn is not None:
             try:
-                update_query = "UPDATE users SET language = ? WHERE user_id = ?"
+                update_query = "UPDATE orders SET language = ? WHERE user_id = ?"
                 update_params = (language_code, update.callback_query.from_user.id)
                 execute_query_with_retry(conn, update_query, update_params)
             except Exception as e:
@@ -391,6 +391,21 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         else:
             user_data.set_end_time(selected_time)
             update_order_data(user_data.user_id, selected_time, "UPDATE orders SET end_time = ? WHERE user_id = ?")
+            # === ВСТАВЛЯЕМ ЗДЕСЬ БЛОК ДЛЯ РАСЧЕТА ПРОДОЛЖИТЕЛЬНОСТИ ===
+            # Расчет продолжительности
+            start_time = datetime.strptime(user_data.get_start_time(), '%H:%M')
+            end_time = datetime.strptime(user_data.get_end_time(), '%H:%M')
+            duration_minutes = (end_time - start_time).seconds // 60
+
+            # Округление до ближайшего часа
+            if duration_minutes % 60 != 0:
+                duration_hours = (duration_minutes // 60) + 1
+            else:
+                duration_hours = duration_minutes // 60
+
+            # Обновляем длительность в базе данных
+            update_order_data(user_data.user_id, duration_hours, "UPDATE orders SET duration = ? WHERE user_id = ?")
+            # === КОНЕЦ ВСТАВКИ ===
             start_time = datetime.strptime(user_data.get_start_time(), '%H:%M')
             end_time = datetime.strptime(user_data.get_end_time(), '%H:%M')
             if (end_time - start_time).seconds >= 7200:

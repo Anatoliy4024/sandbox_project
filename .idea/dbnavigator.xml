@@ -12,12 +12,12 @@
   <component name="DBNavigator.Project.DatabaseBrowserManager">
     <autoscroll-to-editor value="false" />
     <autoscroll-from-editor value="true" />
-    <show-object-properties value="true" />
+    <show-object-properties value="false" />
     <loaded-nodes />
   </component>
   <component name="DBNavigator.Project.DatabaseConsoleManager">
-    <connection id="ce318974-0476-490c-a943-21a6e3af636f">
-      <console name="sqlite.db" type="STANDARD" schema="" session="Main" />
+    <connection id="e1848959-1962-4e92-9f51-e834dc9283fd">
+      <console name="Sqlite" type="STANDARD" schema="" session="Main"><![CDATA[SELECT * FROM orders]]></console>
     </connection>
   </component>
   <component name="DBNavigator.Project.DatabaseEditorStateManager">
@@ -27,11 +27,23 @@
     <open-files />
   </component>
   <component name="DBNavigator.Project.DatabaseSessionManager">
-    <connection id="ce318974-0476-490c-a943-21a6e3af636f" />
+    <connection id="e1848959-1962-4e92-9f51-e834dc9283fd" />
   </component>
   <component name="DBNavigator.Project.DatasetFilterManager">
-    <filter-actions connection-id="ce318974-0476-490c-a943-21a6e3af636f" dataset="main.users" active-filter-id="EMPTY_FILTER" />
-    <filter-actions connection-id="ce318974-0476-490c-a943-21a6e3af636f" dataset="main.orders" active-filter-id="EMPTY_FILTER" />
+    <filter-actions connection-id="e1848959-1962-4e92-9f51-e834dc9283fd" dataset="main.users" active-filter-id="EMPTY_FILTER" />
+    <filter-actions connection-id="e1848959-1962-4e92-9f51-e834dc9283fd" dataset="main.sqlite_sequence" active-filter-id="EMPTY_FILTER" />
+    <filter-actions connection-id="e1848959-1962-4e92-9f51-e834dc9283fd" dataset="main.orders" active-filter-id="EMPTY_FILTER" />
+  </component>
+  <component name="DBNavigator.Project.ExecutionManager">
+    <retain-sticky-names value="false" />
+  </component>
+  <component name="DBNavigator.Project.MethodExecutionManager">
+    <method-browser />
+    <execution-history>
+      <group-entries value="true" />
+      <execution-inputs />
+    </execution-history>
+    <argument-values-cache />
   </component>
   <component name="DBNavigator.Project.ObjectQuickFilterManager">
     <last-used-operator value="EQUAL" />
@@ -39,9 +51,9 @@
   </component>
   <component name="DBNavigator.Project.Settings">
     <connections>
-      <connection id="ce318974-0476-490c-a943-21a6e3af636f" active="true" signed="true">
+      <connection id="e1848959-1962-4e92-9f51-e834dc9283fd" active="true" signed="true">
         <database>
-          <name value="sqlite.db" />
+          <name value="Sqlite" />
           <description value="" />
           <database-type value="SQLITE" />
           <config-type value="BASIC" />
@@ -528,5 +540,9 @@
         </visibility-settings>
       </environment>
     </general-settings>
+  </component>
+  <component name="DBNavigator.Project.StatementExecutionManager">
+    <execution-variables />
+    <execution-variable-types />
   </component>
 </project>

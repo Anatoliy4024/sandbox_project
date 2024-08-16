@@ -8,7 +8,7 @@ def fetch_all_users():
     cursor = conn.cursor()
  #   cursor.execute("SELECT * FROM user_sessions")
     cursor.execute("SELECT * FROM users")
- #   cursor.execute("SELECT * FROM orders")
+    #cursor.execute("SELECT * FROM orders")
     rows = cursor.fetchall()
     for row in rows:
         print(row)

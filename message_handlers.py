@@ -309,7 +309,26 @@ async def handle_preferences(update: Update, context: ContextTypes.DEFAULT_TYPE)
     user_data = context.user_data.get('user_data', UserData())
     user_data.set_preferences(update.message.text)
     user_id = update.message.from_user.id if update.message else update.callback_query.from_user.id
-    update_order_data(user_id, update.message.text, "UPDATE orders SET preferences = ? WHERE user_id = ?")
+
+    # Получаем session_number для обновления записи
+    session_number_query = "SELECT MAX(session_number) FROM orders WHERE user_id = ?"
+    conn = create_connection(DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute(session_number_query, (user_data.get_user_id(),))
+    session_number = cursor.fetchone()[0]
+
+    if session_number is None:
+        logging.error("Не удалось получить session_number. Возможно, записи в базе данных отсутствуют.")
+    else:
+        logging.info(f"Используем session_number: {session_number} для обновления.")
+
+        # Обновляем запись только для последней сессии
+        update_order_data(
+            "UPDATE orders SET preferences = ? WHERE user_id = ? AND session_number = ?",
+            (update.message.text, user_data.get_user_id(), session_number),
+            user_data.get_user_id()
+        )
+
     user_data.set_step('preferences_received')
     context.user_data['user_data'] = user_data
 
@@ -337,7 +356,25 @@ async def handle_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_data = context.user_data.get('user_data', UserData())
     user_data.set_city(update.message.text)
     user_id = update.message.from_user.id if update.message else update.callback_query.from_user.id
-    update_order_data(user_id, update.message.text, "UPDATE orders SET city = ? WHERE user_id = ?")
+
+    # Получаем session_number для обновления записи
+    session_number_query = "SELECT MAX(session_number) FROM orders WHERE user_id = ?"
+    conn = create_connection(DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute(session_number_query, (user_data.get_user_id(),))
+    session_number = cursor.fetchone()[0]
+
+    if session_number is None:
+        logging.error("Не удалось получить session_number. Возможно, записи в базе данных отсутствуют.")
+    else:
+        logging.info(f"Используем session_number: {session_number} для обновления.")
+
+        # Обновляем запись только для последней сессии
+        update_order_data(
+            "UPDATE orders SET city = ? WHERE user_id = ? AND session_number = ?",
+            (update.message.text, user_data.get_user_id(), session_number),
+            user_data.get_user_id()
+        )
 
     context.user_data['user_data'] = user_data
 
@@ -359,7 +396,6 @@ async def handle_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
         reply_markup=yes_no_keyboard(language_code)
     )
     user_data.set_step('city_confirmation')
-
 
 async def handle_city_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_data = context.user_data.get('user_data', UserData())

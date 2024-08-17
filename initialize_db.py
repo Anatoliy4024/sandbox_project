@@ -34,6 +34,7 @@ def initialize_db():
         city TEXT,
         preferences TEXT,
         status INTEGER,
+        calculated_cost INTEGER,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY(user_id) REFERENCES users(user_id)

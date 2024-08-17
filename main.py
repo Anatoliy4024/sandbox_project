@@ -178,9 +178,24 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     logging.info("Функция start завершена")
 
-
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logging.info("Функция button_callback запущена")
+
+    # Функция для расчета итоговой стоимости
+    def calculate_total_cost(duration, people_count):
+        # Базовая стоимость
+        base_cost = 160
+
+        # Дополнительные часы
+        additional_hours = max(0, duration - 2) * 20
+
+        # Дополнительные персоны
+        additional_persons = max(0, people_count - 2) * 30
+
+        # Итоговая стоимость
+        total_cost = base_cost + additional_hours + additional_persons
+
+        return total_cost
 
     # Инициализация данных пользователя
     user_data = context.user_data.get('user_data', UserData())
@@ -445,7 +460,6 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 (duration_hours, user_data.get_user_id(), session_number),
                 user_data.get_user_id()
             )
-            # === КОНЕЦ ВСТАВКИ ===
 
             if (end_time - start_time).seconds >= 7200:
                 user_data.set_step('time_confirmation')
@@ -540,23 +554,27 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         await query.message.reply_text(
-            f"City set to {query.data}. Confirm your selection.",
+            f"Preferences set to {query.data}. Confirm your selection.",
             reply_markup=yes_no_keyboard(user_data.get_language())
         )
 
-    # Добавляем обработку для предпочтений
-    elif user_data.get_step() == 'preferences_request':
-        user_data.set_preferences(query.data)
+    elif user_data.get_step() == 'city_confirmation':
+        # Получаем данные для расчета стоимости
+        duration = user_data.get_duration()
+        people_count = user_data.get_person_count()
 
-        # Обновляем запись только для последней сессии
+        # Рассчитываем стоимость
+        total_cost = calculate_total_cost(duration, people_count)
+
+        # Обновляем запись в базе данных
         update_order_data(
-            "UPDATE orders SET preferences = ? WHERE user_id = ? AND session_number = ?",
-            (query.data, user_data.get_user_id(), session_number),
+            "UPDATE orders SET calculated_cost = ? WHERE user_id = ? AND session_number = ?",
+            (total_cost, user_data.get_user_id(), session_number),
             user_data.get_user_id()
         )
 
         await query.message.reply_text(
-            f"Preferences set to {query.data}. Confirm your selection.",
+            f"Total cost calculated: {total_cost} EUR. Confirm your selection.",
             reply_markup=yes_no_keyboard(user_data.get_language())
         )
 
@@ -566,7 +584,6 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await show_calendar(query, month_offset, user_data.get_language())
 
     logging.info("Функция button_callback завершена")
-
 
 async def show_calendar(query, month_offset, language):
     logging.info(f"Функция show_calendar запущена с параметрами: month_offset={month_offset}, language={language}")

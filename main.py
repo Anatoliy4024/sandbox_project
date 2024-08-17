@@ -300,13 +300,13 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             user_data.set_step('preferences_request')
             preferences_request_texts = {
                 'en': 'Please write your preferences for table setting colors, food items (or exclusions), and desired table accessories (candles, glasses, etc.) - no more than 1000 characters.',
-'ru': 'Напишите свои предпочтения по цвету сервировки, продуктам (или исключениям), и желаемые аксессуары для стола (свечи, бокалы и прочее) - не более 1000 знаков.',
-'es': 'Escriba sus preferencias de colores para la mesa, artículos de comida (o exclusiones), y accesorios para la mesa (velas, copas, etc.) - no más de 1000 caracteres.',
-'fr': 'Veuillez écrire vos préférences pour les couleurs de la table, les aliments (ou exclusions), et les accessoires de table désirés (bougies, verres, etc.) - pas plus de 1000 caractères.',
-'uk': 'Напишіть свої уподобання щодо кольору сервірування, продуктів (або виключень), і бажані аксесуари для столу (свічки, келихи тощо) - не більше 1000 знаків.',
-'pl': 'Napisz swoje preferencje dotyczące kolorów nakrycia stołu, produktów spożywczych (lub wykluczeń), i pożądanych akcesoriów do stołu (świece, szklanki itp.) - nie więcej niż 1000 znaków.',
-'de': 'Bitte schreiben Sie Ihre Vorlieben für Tischfarben, Lebensmittel (oder Ausschlüsse), und gewünschte Tischaccessoires (Kerzen, Gläser usw.) - nicht mehr als 1000 Zeichen.',
-'it': 'Scrivi le tue preferenze per i colori della tavola, gli alimenti (o esclusioni), e gli accessori desiderati per la tavola (candele, bicchieri, ecc.) - non più di 1000 caratteri.'
+                'ru': 'Напишите свои предпочтения по цвету сервировки, продуктам (или исключениям), и желаемые аксессуары для стола (свечи, бокалы и прочее) - не более 1000 знаков.',
+                'es': 'Escriba sus preferencias de colores para la mesa, artículos de comida (o exclusiones), y accesorios para la mesa (velas, copas, etc.) - no más de 1000 caracteres.',
+                'fr': 'Veuillez écrire vos préférences pour les couleurs de la table, les aliments (ou exclusions), et les accessoires de table désirés (bougies, verres, etc.) - pas plus de 1000 caractères.',
+                'uk': 'Напишіть свої уподобання щодо кольору сервірування, продуктів (або виключень), і бажані аксесуари для столу (свічки, келихи тощо) - не більше 1000 знаків.',
+                'pl': 'Napisz swoje preferencje dotyczące kolorów nakrycia stołu, produktów spożywczych (lub wykluczeń), i pożądanych akcesoriów do stołu (świece, szklanki itp.) - nie więcej niż 1000 znaków.',
+                'de': 'Bitte schreiben Sie Ihre Vorlieben für Tischfarben, Lebensmittel (oder Ausschlüsse), und gewünschte Tischaccessoires (Kerzen, Gläser usw.) - nicht mehr als 1000 Zeichen.',
+                'it': 'Scrivi le tue preferenze per i colori della tavola, gli alimenti (o esclusioni), e gli accessori desiderati per la tavola (candele, bicchieri, ecc.) - non più di 1000 caratteri.'
             }
             await query.message.reply_text(
                 preferences_request_texts.get(user_data.get_language(),
@@ -389,7 +389,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'es': f'Seleccionaste {selected_date}, ¿correcto?',
             'fr': f'Vous avez sélectionné {selected_date}, correct ?',
             'uk': f'Ви вибрали {selected_date}, правильно?',
-            'pl': f'Wybrałeś {selected_date}, poprawне?',
+            'pl': f'Wybrałeś {selected_date}, правильно?',
             'de': f'Sie haben {selected_date} gewählt, richtig?',
             'it': f'Hai selezionato {selected_date}, corretto?'
         }
@@ -420,9 +420,15 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         else:
             user_data.set_end_time(selected_time)
-            update_order_data(user_data.user_id, selected_time, "UPDATE orders SET end_time = ? WHERE user_id = ?")
-            # === ВСТАВЛЯЕМ ЗДЕСЬ БЛОК ДЛЯ РАСЧЕТА ПРОДОЛЖИТЕЛЬНОСТИ ===
-            # Расчет продолжительности
+
+            # Обновляем запись только для последней сессии
+            update_order_data(
+                "UPDATE orders SET end_time = ? WHERE user_id = ? AND session_number = ?",
+                (selected_time, user_data.get_user_id(), session_number),
+                user_data.get_user_id()
+            )
+
+            # === ВСТАВЛЯЕМ БЛОК ДЛЯ РАСЧЕТА ПРОДОЛЖИТЕЛЬНОСТИ ===
             start_time = datetime.strptime(user_data.get_start_time(), '%H:%M')
             end_time = datetime.strptime(user_data.get_end_time(), '%H:%M')
             duration_minutes = (end_time - start_time).seconds // 60
@@ -434,10 +440,13 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 duration_hours = duration_minutes // 60
 
             # Обновляем длительность в базе данных
-            update_order_data(user_data.user_id, duration_hours, "UPDATE orders SET duration = ? WHERE user_id = ?")
+            update_order_data(
+                "UPDATE orders SET duration = ? WHERE user_id = ? AND session_number = ?",
+                (duration_hours, user_data.get_user_id(), session_number),
+                user_data.get_user_id()
+            )
             # === КОНЕЦ ВСТАВКИ ===
-            start_time = datetime.strptime(user_data.get_start_time(), '%H:%M')
-            end_time = datetime.strptime(user_data.get_end_time(), '%H:%M')
+
             if (end_time - start_time).seconds >= 7200:
                 user_data.set_step('time_confirmation')
                 await query.message.reply_text(
@@ -458,10 +467,19 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         selected_person = query.data.split('_')[1]
         user_data.set_step('people_confirmation')
         user_data.set_person_count(selected_person)
-        update_order_data(user_data.user_id, int(selected_person), "UPDATE orders SET people_count = ? WHERE user_id = ?")
-        update_order_data(user_data.user_id, ORDER_STATUS["заполнено для расчета"], "UPDATE orders SET status = ? WHERE user_id = ?")
 
-        # Меняем цвет кнопки на красный и делаем все остальные кнопки неактивными
+        # Обновляем запись только для последней сессии
+        update_order_data(
+            "UPDATE orders SET people_count = ? WHERE user_id = ? AND session_number = ?",
+            (int(selected_person), user_data.get_user_id(), session_number),
+            user_data.get_user_id()
+        )
+        update_order_data(
+            "UPDATE orders SET status = ? WHERE user_id = ? AND session_number = ?",
+            (ORDER_STATUS["заполнено для расчета"], user_data.get_user_id(), session_number),
+            user_data.get_user_id()
+        )
+
         await query.edit_message_reply_markup(
             reply_markup=disable_person_buttons(query.message.reply_markup, selected_person))
 
@@ -471,7 +489,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'es': f'Seleccionaste {selected_person} personas, ¿correctо?',
             'fr': f'Vous avez sélectionné {selected_person} personnes, correct ?',
             'uk': f'Ви вибрали {selected_person} людей, правильно?',
-            'pl': f'Wybrałeś {selected_person} osób, poprawне?',
+            'pl': f'Wybrałeś {selected_person} osób, правильно?',
             'de': f'Sie haben {selected_person} Personen gewählt, richtig?',
             'it': f'Hai selezionato {selected_person} persone, corretto?'
         }
@@ -484,9 +502,14 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         selected_style = query.data.split('_')[1]
         user_data.set_step('style_confirmation')
         user_data.set_style(selected_style)
-        update_order_data(user_data.user_id, selected_style, "UPDATE orders SET selected_style = ? WHERE user_id = ?")
 
-        # Меняем цвет кнопки на красный и делаем все остальные кнопки неактивными
+        # Обновляем запись только для последней сессии
+        update_order_data(
+            "UPDATE orders SET selected_style = ? WHERE user_id = ? AND session_number = ?",
+            (selected_style, user_data.get_user_id(), session_number),
+            user_data.get_user_id()
+        )
+
         await query.edit_message_reply_markup(
             reply_markup=disable_style_buttons(query.message.reply_markup, selected_style))
 
@@ -502,6 +525,38 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         }
         await query.message.reply_text(
             confirmation_texts.get(user_data.get_language(), f'You selected {selected_style} style, correct?'),
+            reply_markup=yes_no_keyboard(user_data.get_language())
+        )
+
+    # Добавляем обработку для города
+    elif user_data.get_step() == 'city_request':
+        user_data.set_city(query.data)
+
+        # Обновляем запись только для последней сессии
+        update_order_data(
+            "UPDATE orders SET city = ? WHERE user_id = ? AND session_number = ?",
+            (query.data, user_data.get_user_id(), session_number),
+            user_data.get_user_id()
+        )
+
+        await query.message.reply_text(
+            f"City set to {query.data}. Confirm your selection.",
+            reply_markup=yes_no_keyboard(user_data.get_language())
+        )
+
+    # Добавляем обработку для предпочтений
+    elif user_data.get_step() == 'preferences_request':
+        user_data.set_preferences(query.data)
+
+        # Обновляем запись только для последней сессии
+        update_order_data(
+            "UPDATE orders SET preferences = ? WHERE user_id = ? AND session_number = ?",
+            (query.data, user_data.get_user_id(), session_number),
+            user_data.get_user_id()
+        )
+
+        await query.message.reply_text(
+            f"Preferences set to {query.data}. Confirm your selection.",
             reply_markup=yes_no_keyboard(user_data.get_language())
         )
 

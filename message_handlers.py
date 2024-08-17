@@ -148,15 +148,32 @@ async def handle_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print("Принт 14: Конец функции handle_name")
 
 
-def save_user_id_to_orders(user_id):
-    """Сохраняет user_id в таблицу orders и присваивает null полям, которые будут заполнены позже."""
+import sqlite3
+import logging
+from constants import DATABASE_PATH
+
+
+def create_connection(db_file):
+    """Создает соединение с базой данных SQLite, указанной в db_file."""
+    try:
+        conn = sqlite3.connect(db_file)
+        logging.info(f"Соединение с базой данных установлено: {db_file}")
+        return conn
+    except sqlite3.Error as e:
+        logging.error(f"Ошибка подключения к базе данных: {e}")
+        return None
+
+
+def update_order_data(query, params, user_id):
+    """Обновляет данные в таблице orders с проверками и обработкой ошибок."""
     conn = create_connection(DATABASE_PATH)
+
     if conn is not None:
         try:
-            logging.info(f"Проверка существования записи в orders для user_id: {user_id}")
-            select_query = "SELECT 1 FROM orders WHERE user_id = ?"
+            # Проверка существования записи для данного user_id
+            check_query = "SELECT 1 FROM orders WHERE user_id = ?"
             cursor = conn.cursor()
-            cursor.execute(select_query, (user_id,))
+            cursor.execute(check_query, (user_id,))
             exists = cursor.fetchone()
 
             if exists:
@@ -171,13 +188,19 @@ def save_user_id_to_orders(user_id):
                 conn.commit()
                 logging.info(f"user_id {user_id} успешно добавлен в таблицу orders с null для полей.")
 
-        except Exception as e:
-            logging.error(f"Ошибка базы данных при работе с таблицей orders: {e}")
+            # Выполнение обновления данных
+            logging.info(f"Выполнение запроса: {query} с параметрами {params}")
+            cursor.execute(query, params)
+            conn.commit()
+            logging.info(f"Запрос успешно выполнен: {query} с параметрами {params}")
+
+        except sqlite3.Error as e:
+            logging.error(f"Ошибка базы данных при выполнении запроса: {e}")
         finally:
             conn.close()
             logging.info("Соединение с базой данных закрыто")
     else:
-        logging.error("Не удалось создать соединение с базой данных для работы с таблицей orders")
+        logging.error("Не удалось создать соединение с базой данных для выполнения запроса")
 
 
 # Функция для обработки выбора даты
@@ -212,40 +235,40 @@ async def handle_date_selection(update: Update, context: ContextTypes.DEFAULT_TY
 #     else:
 #         logging.error("Не удалось создать соединение с базой данных для работы с таблицей orders")
 
-def update_order_data(user_id, object, query):
-    """Обновляет дату в таблице orders для указанного user_id."""
-    conn = create_connection(DATABASE_PATH)
-    if conn is not None:
-        try:
-            logging.info(f"Обновление записи в orders для user_id: {user_id} с датой: {object}")
-            if isinstance(object,datetime):
-                object = datetime.strptime(object, "%Y-%m-%d")
-            elif isinstance(object,int):
-                object = object
-            execute_query_with_retry(conn, query, (object, user_id))
-            logging.info(f"Принт: Дата {object} успешно обновлена для user_id {user_id}")
-            logging.info(f"Дата {object} успешно обновлена для user_id {user_id}")
-            print(f"Принт: +++++++++++++++++++Дата {object} успешно обновлена для user_id {user_id}")
-        except Exception as e:
-            logging.error(f"Ошибка базы данных при обновлении даты в таблице orders: {e}")
-        finally:
-            conn.close()
-            logging.info("Соединение с базой данных закрыто")
-    else:
-        logging.error("Не удалось создать соединение с базой данных для работы с таблицей orders")
-
-
-# Словарь с переводами сообщения "Выбор только кнопками" на разные языки
-translations = {
-    'en': "Please use the buttons",
-    'ru': "Выбор только кнопками",
-    'es': "Por favor, usa los botones",
-    'fr': "Veuillez utiliser les boutons",
-    'de': "Bitte verwenden Sie die Tasten",
-    'it': "Si prega di utilizzare i pulsanti",
-    'uk': "Будь ласка, використовуйте кнопки",
-    'pl': "Proszę użyć przycisków"
-}
+# def update_order_data(user_id, object, query):
+#     """Обновляет дату в таблице orders для указанного user_id."""
+#     conn = create_connection(DATABASE_PATH)
+#     if conn is not None:
+#         try:
+#             logging.info(f"Обновление записи в orders для user_id: {user_id} с датой: {object}")
+#             if isinstance(object,datetime):
+#                 object = datetime.strptime(object, "%Y-%m-%d")
+#             elif isinstance(object,int):
+#                 object = object
+#             execute_query_with_retry(conn, query, (object, user_id))
+#             logging.info(f"Принт: Дата {object} успешно обновлена для user_id {user_id}")
+#             logging.info(f"Дата {object} успешно обновлена для user_id {user_id}")
+#             print(f"Принт: +++++++++++++++++++Дата {object} успешно обновлена для user_id {user_id}")
+#         except Exception as e:
+#             logging.error(f"Ошибка базы данных при обновлении даты в таблице orders: {e}")
+#         finally:
+#             conn.close()
+#             logging.info("Соединение с базой данных закрыто")
+#     else:
+#         logging.error("Не удалось создать соединение с базой данных для работы с таблицей orders")
+#
+#
+# # Словарь с переводами сообщения "Выбор только кнопками" на разные языки
+# translations = {
+#     'en': "Please use the buttons",
+#     'ru': "Выбор только кнопками",
+#     'es': "Por favor, usa los botones",
+#     'fr': "Veuillez utiliser les boutons",
+#     'de': "Bitte verwenden Sie die Tasten",
+#     'it': "Si prega di utilizzare i pulsanti",
+#     'uk': "Будь ласка, використовуйте кнопки",
+#     'pl': "Proszę użyć przycisków"
+# }
 
 def get_translation(user_data, key):
     language_code = user_data.get_language()  # Получаем код языка пользователя

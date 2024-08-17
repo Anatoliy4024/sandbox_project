@@ -143,6 +143,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 new_session_number = 1
             else:
                 new_session_number = current_session + 1
+                user_data.set_session_number(new_session_number)
 
             # Принт для отслеживания в терминале
             print(f"Принт: Новый session_number для user_id {user_id} = {new_session_number}")
@@ -181,17 +182,27 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logging.info("Функция button_callback запущена")
 
-    query = update.callback_query
-    await query.answer()
-    logging.info("Функция ??????????????????????? запущена")
-    logging.info(query.data)
-    logging.info("Функция ??????????????????????? запущена")
-
-
-
     # Инициализация данных пользователя
     user_data = context.user_data.get('user_data', UserData())
     context.user_data['user_data'] = user_data
+
+    query = update.callback_query
+    await query.answer()
+    # Обновляем запись только для последней сессии
+    session_number_query = "SELECT MAX(session_number) FROM orders WHERE user_id = ?"
+    conn = create_connection(DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute(session_number_query, (user_data.get_user_id(),))
+    session_number = cursor.fetchone()[0]
+
+    # Проверяем, что session_number не None и является числом
+    if session_number is None:
+        logging.error("Не удалось получить session_number. Возможно, записи в базе данных отсутствуют.")
+    else:
+        logging.info(f"Используем session_number: {session_number} для обновления.")
+    logging.info("Функция ??????????????????????? запущена")
+    logging.info(query.data)
+    logging.info("Функция ??????????????????????? запущена")
 
     # Обработка выбора языка
     if query.data.startswith('lang_'):
@@ -360,7 +371,13 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print(f"Принт: Выбрана дата - {selected_date}")
         user_data.set_step('date_confirmation')
         user_data.set_date(selected_date)
-        update_order_data(user_data.user_id, selected_date, "UPDATE orders SET selected_date = ? WHERE user_id = ?")
+
+        # Обновляем запись только для последней сессии
+        update_order_data(
+            "UPDATE orders SET selected_date = ? WHERE user_id = ? AND session_number = ?",
+            (selected_date, user_data.get_user_id(), session_number),
+            user_data.get_user_id()
+        )
 
         # Меняем цвет кнопки на красный и делаем все остальные кнопки неактивными
         await query.edit_message_reply_markup(
@@ -383,15 +400,24 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif query.data.startswith('time_'):
         selected_time = query.data.split('_')[1]
+
         if not user_data.get_start_time():
             user_data.set_start_time(selected_time)
-            update_order_data(user_data.user_id, selected_time, "UPDATE orders SET start_time = ? WHERE user_id = ?")
+
+            # Обновляем запись только для последней сессии
+            update_order_data(
+                "UPDATE orders SET start_time = ? WHERE user_id = ? AND session_number = ?",
+                (selected_time, user_data.get_user_id(), session_number),
+                user_data.get_user_id()
+            )
+
             await query.message.reply_text(
                 time_set_texts['start_time'].get(user_data.get_language(),
                                                  'Start time set to {}. Now select end time.').format(selected_time),
                 reply_markup=generate_time_selection_keyboard(user_data.get_language(), 'end',
                                                               user_data.get_start_time())
             )
+
         else:
             user_data.set_end_time(selected_time)
             update_order_data(user_data.user_id, selected_time, "UPDATE orders SET end_time = ? WHERE user_id = ?")

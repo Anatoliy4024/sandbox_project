@@ -151,13 +151,105 @@ class UserData:
         self.name = None
         self.preferences = None
         self.city = None
-        self.month_offset = 0  # Добавьте это свойство
+        self.month_offset = 0
         self.step = None
         self.start_time = None
         self.end_time = None
         self.person_count = None
         self.style = None
         self.date = None
+        self.session_number = None  # Добавляем свойство session_number
+
+    # Метод для установки значения session_number
+    def set_session_number(self, session_number):
+        self.session_number = session_number
+
+    # Метод для получения значения session_number
+    def get_session_number(self):
+        return self.session_number
+
+    # Остальные методы остаются без изменений
+    def get_month_offset(self):
+        return self.month_offset
+
+    def set_month_offset(self, offset):
+        self.month_offset = offset
+
+    def set_user_id(self, user_id):
+        self.user_id = user_id
+
+    def get_user_id(self):
+        return self.user_id
+
+    def set_username(self, username):
+        self.username = username
+
+    def get_username(self):
+        return self.username
+
+    def set_language(self, language):
+        self.language = language
+
+    def get_language(self):
+        return self.language
+
+    def set_name(self, name):
+        self.name = name
+
+    def get_name(self):
+        return self.name
+
+    def set_preferences(self, preferences):
+        self.preferences = preferences
+
+    def get_preferences(self):
+        return self.preferences
+
+    def set_city(self, city):
+        self.city = city
+
+    def get_city(self):
+        return self.city
+
+    def set_step(self, step):
+        self.step = step
+
+    def get_step(self):
+        return self.step
+
+    def set_start_time(self, start_time):
+        self.start_time = start_time
+
+    def get_start_time(self):
+        return self.start_time
+
+    def set_end_time(self, end_time):
+        self.end_time = end_time
+
+    def get_end_time(self):
+        return self.end_time
+
+    def set_person_count(self, person_count):
+        self.person_count = person_count
+
+    def get_person_count(self):
+        return self.person_count
+
+    def set_style(self, style):
+        self.style = style
+
+    def get_style(self):
+        return self.style
+
+    def set_date(self, date):
+        self.date = date
+
+    def get_date(self):
+        return self.date
+
+    def clear_time(self):
+        self.start_time = None
+        self.end_time = None
 
     def get_month_offset(self):
         return self.month_offset

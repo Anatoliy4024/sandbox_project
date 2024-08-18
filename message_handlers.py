@@ -390,26 +390,103 @@ async def handle_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await handle_city_confirmation(update, context)
 
 
+import asyncio  # Добавляем импорт для работы с задержкой
+
+# Обработчик города
+async def handle_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_data = context.user_data.get('user_data', UserData())
+    user_data.set_city(update.message.text)
+    user_id = update.message.from_user.id if update.message else update.callback_query.from_user.id
+
+    # Получаем session_number для обновления записи
+    session_number_query = "SELECT MAX(session_number) FROM orders WHERE user_id = ?"
+    conn = create_connection(DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute(session_number_query, (user_data.get_user_id(),))
+    session_number = cursor.fetchone()[0]
+
+    if session_number is None:
+        logging.error("Не удалось получить session_number. Возможно, записи в базе данных отсутствуют.")
+    else:
+        logging.info(f"Используем session_number: {session_number} для обновления.")
+
+        # Обновляем запись только для последней сессии
+        update_order_data(
+            "UPDATE orders SET city = ? WHERE user_id = ? AND session_number = ?",
+            (update.message.text, user_data.get_user_id(), session_number),
+            user_data.get_user_id()
+        )
+
+    context.user_data['user_data'] = user_data
+
+    # Переходим к следующему шагу
+    await handle_city_confirmation(update, context)
+
+# Обработчик подтверждения города и отправка ордера
 async def handle_city_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_data = context.user_data.get('user_data', UserData())
 
-    # Текстовое сообщение с благодарностью и ожиданием расчета
-    confirmation_texts = {
-        'en': f'Thank you, {user_data.get_name()}. Please wait for the calculation.',
-        'ru': f'Спасибо, {user_data.get_name()}. Ожидайте расчет.',
-        'es': f'Gracias, {user_data.get_name()}. Por favor, espere el cálculo.',
-        'fr': f'Merci, {user_data.get_name()}. Veuillez attendre le calcul.',
-        'uk': f'Дякуємо, {user_data.get_name()}. Будь ласка, зачекайте на розрахунок.',
-        'pl': f'Dziękujemy, {user_data.get_name()}. Proszę czekać na obliczenia.',
-        'de': f'Danke, {user_data.get_name()}. Bitte warten Sie auf die Berechnung.',
-        'it': f'Grazie, {user_data.get_name()}. Attendere il calcolo.'
-    }
+    if user_data.get_step() == 'city_request':  # Убедимся, что переходим на правильный шаг
+        # Подтверждение сохранения данных
+        confirmation_texts = {
+            'en': 'Thank you. Please wait for the calculation.',
+            'ru': 'Спасибо. Ожидайте расчет.',
+            'es': 'Gracias. Por favor, espere el cálculo.',
+            'fr': 'Merci. Veuillez attendre le calcul.',
+            'uk': 'Дякуємо. Будь ласка, зачекайте на розрахунок.',
+            'pl': 'Dziękujemy. Proszę czekać na obliczenia.',
+            'de': 'Danke. Bitte warten Sie auf die Berechnung.',
+            'it': 'Grazie. Attendere il calcolo.'
+        }
 
-    await update.message.reply_text(
-        confirmation_texts.get(user_data.get_language(), f'Thank you. Please wait for the calculation.')
-    )
+        # Отправляем сообщение "Спасибо. Ожидайте расчет."
+        await update.message.reply_text(
+            confirmation_texts.get(user_data.get_language())
+        )
 
-    user_data.set_step('data_saved')
+        # Добавляем искусственную задержку для создания эффекта ожидания
+        await asyncio.sleep(2)  # Задержка в 2 секунды
+
+        # Генерация текста ордера
+        order_summary = generate_order_summary(user_data)
+
+        # Отправляем текст ордера клиенту
+        await update.message.reply_text(order_summary)
+
+        user_data.set_step('order_sent')
+
+# Функция генерации текста ордера
+def generate_order_summary(user_data):
+    order_id = f"{user_data.get_user_id()}_{user_data.get_session_number()}"
+    order_text = f"Проверьте ваш ордер на бронирование:\n\nОрдер № {order_id}\n\n"
+
+    # Добавляем к ордеру все введенные данные
+    if user_data.get_name():
+        order_text += f"Имя клиента: {user_data.get_name()}\n"
+    if user_data.get_preferences():
+        order_text += f"Предпочтения: {user_data.get_preferences()}\n"
+    if user_data.get_city():
+        order_text += f"Город: {user_data.get_city()}\n"
+
+    return order_text
+
+# Функция генерации текста ордера
+def generate_order_summary(user_data):
+    order_id = f"{user_data.get_user_id()}_{user_data.get_session_number()}"
+    order_text = f"Проверьте ваш ордер на бронирование:\n\nОрдер № {order_id}\n\n"
+
+    # Добавляем к ордеру все введенные данные
+    if user_data.get_name():
+        order_text += f"Имя клиента: {user_data.get_name()}\n"
+    if user_data.get_preferences():
+        order_text += f"Предпочтения: {user_data.get_preferences()}\n"
+    if user_data.get_city():
+        order_text += f"Город: {user_data.get_city()}\n"
+
+    # Дополнительно можно добавить любые другие данные, которые есть в user_data
+    # Например, если у вас есть дата, время, стиль вечеринки и т.д.
+
+    return order_text
 
 # Функция для получения текущей клавиатуры для шага
 def get_current_step_keyboard(step, user_data):

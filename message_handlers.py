@@ -97,16 +97,26 @@ async def handle_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
             exists = cursor.fetchone()
 
             if exists:
-                # Обновление данных пользователя
-                logging.info(f"Обновление данных пользователя: {user_data.get_username()}")
-                update_query = "UPDATE users SET username = ?, language = ?, user_name = ? WHERE user_id= ?"
-                update_params = (user_data.get_username(), user_data.get_language(), user_data.get_name(), update.message.from_user.id)
-                execute_query_with_retry(conn, update_query, update_params)
+                # Обновление имени пользователя в таблице orders
+                logging.info(f"Обновление имени пользователя: {user_data.get_name()}")
+
+                # Получаем session_number для обновления записи
+                session_number_query = "SELECT MAX(session_number) FROM orders WHERE user_id = ?"
+                cursor = conn.cursor()
+                cursor.execute(session_number_query, (update.message.from_user.id,))
+                session_number = cursor.fetchone()[0]
+
+                if session_number is None:
+                    logging.error("Не удалось получить session_number. Возможно, записи в базе данных отсутствуют.")
+                else:
+                    update_query = "UPDATE orders SET user_name = ? WHERE user_id = ? AND session_number = ?"
+                    update_params = (user_data.get_name(), update.message.from_user.id, session_number)
+                    execute_query_with_retry(conn, update_query, update_params)
             else:
-                # Вставка нового пользователя
+                # Вставка нового пользователя в users
                 logging.info(f"Вставка нового пользователя: {user_data.get_username()}")
-                insert_query = "INSERT INTO users (user_id, username, language, user_name) VALUES (?, ?, ?, ?)"
-                insert_params = (update.message.from_user.id, user_data.get_username(), user_data.get_language(), user_data.get_name())
+                insert_query = "INSERT INTO users (user_id, username) VALUES (?, ?)"
+                insert_params = (update.message.from_user.id, user_data.get_username())
                 execute_query_with_retry(conn, insert_query, insert_params)
 
             # Теперь сохраняем user_id в таблицу orders
@@ -399,24 +409,31 @@ async def handle_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_city_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_data = context.user_data.get('user_data', UserData())
+
     if user_data.get_step() == 'city_confirmation':
+        # Сохраняем введенный город
+        city = update.message.text
+        user_data.set_city(city)
+
         language_code = user_data.get_language()
 
+        # Подтверждение сохранения данных
         confirmation_texts = {
-            'en': f'{user_data.get_name()}, your data has been saved. Calculating the cost for the proforma invoice.',
-            'ru': f'{user_data.get_name()}, ваши данные сохранены. Рассчитываем стоимость для выдачи вам проформы.',
-            'es': f'{user_data.get_name()}, sus datos han sido guardados. Calculando el costo para emitir la proforma.',
-            'fr': f'{user_data.get_name()}, vos données ont été sauvegardées. Calcul du coût pour l\'émission de la facture proforma.',
-            'uk': f'{user_data.get_name()}, ваші дані збережено. Розраховуємо вартість для видачі вам проформи.',
-            'pl': f'{user_data.get_name()}, twoje dane zostały zapisane. Obliczanie kosztu wystawienia proformy.',
-            'de': f'{user_data.get_name()}, Ihre Daten wurden gespeichert. Berechnung der Kosten für die Proformarechnung.',
-            'it': f'{user_data.get_name()}, i tuoi dati sono stati salvati. Calcolo del costo per l\'emissione della fattura proforma.'
+            'en': f'{user_data.get_name()}, your city "{city}" has been saved. Calculating the cost for the proforma invoice.',
+            'ru': f'{user_data.get_name()}, ваш город "{city}" сохранен. Рассчитываем стоимость для выдачи вам проформы.',
+            'es': f'{user_data.get_name()}, su ciudad "{city}" ha sido guardada. Calculando el costo para emitir la proforma.',
+            'fr': f'{user_data.get_name()}, votre ville "{city}" a été enregistrée. Calcul du coût pour l\'émission de la facture proforma.',
+            'uk': f'{user_data.get_name()}, ваш місто "{city}" збережено. Розраховуємо вартість для видачі вам проформи.',
+            'pl': f'{user_data.get_name()}, twoje miasto "{city}" zostało zapisane. Obliczanie kosztu wystawienia proformy.',
+            'de': f'{user_data.get_name()}, Ihre Stadt "{city}" wurde gespeichert. Berechnung der Kosten für die Proformarechnung.',
+            'it': f'{user_data.get_name()}, la tua città "{city}" è stata salvata. Calcolo del costo per l\'emissione della fattura proforma.'
         }
 
         await update.message.reply_text(
             confirmation_texts.get(language_code,
-                                   f'{user_data.get_name()}, your data has been saved. Calculating the cost for the proforma invoice.')
+                                   f'{user_data.get_name()}, your city "{city}" has been saved. Calculating the cost for the proforma invoice.')
         )
+
         user_data.set_step('data_saved')
 
 
@@ -478,7 +495,7 @@ def save_user_id_to_orders(user_id):
 
 
 
-# Функция для получения перевода на основе языка пользователя
+#№№№Функция для получения перевода на основе языка пользователя
 def get_translation(user_data, key):
     language_code = user_data.get_language()  # Получаем код языка пользователя
     return translations.get(language_code, translations['en'])  # Возвращаем перевод или английский по умолчанию

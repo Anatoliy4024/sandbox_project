@@ -150,8 +150,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             # Создаем новую запись в таблице orders
             insert_query = """
-                INSERT INTO orders (user_id, session_number, selected_date, start_time, end_time, duration, people_count, selected_style, city, preferences, status)
-                VALUES (?, ?, null, null, null, null, null, null, null, null, 1)
+                INSERT INTO orders (user_id, session_number, selected_date, start_time, end_time, duration, people_count,
+                selected_style, city, preferences, calculated_cost, status)
+                VALUES (?, ?, null, null, null, null, null, null, null, null, null, 1)
             """
             cursor.execute(insert_query, (user_id, new_session_number))
             conn.commit()
@@ -552,25 +553,52 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             (query.data, user_data.get_user_id(), session_number),
             user_data.get_user_id()
         )
-
-        await query.message.reply_text(
-            f"Preferences set to {query.data}. Confirm your selection.",
-            reply_markup=yes_no_keyboard(user_data.get_language())
-        )
-
     elif user_data.get_step() == 'city_confirmation':
+
+        if query.data == 'yes':
+            # Блокируем все кнопки выбора города
+            await query.edit_message_reply_markup(reply_markup=disable_yes_no_buttons(query.message.reply_markup))
+
+            # Переход к обработке подтверждения города
+            await handle_city_confirmation(update, context)
+
+        elif query.data == 'no':
+            # Возвращаемся к выбору города, разблокируя соответствующие кнопки
+            user_data.set_step('city_request')
+
+            # Просим пользователя ввести город
+            await query.message.reply_text("Please enter your city:")
+
         # Получаем данные для расчета стоимости
         duration = user_data.get_duration()
-        people_count = user_data.get_person_count()
+        people_count = int(user_data.get_person_count())  # Преобразуем в целое число
+
+        # # Логи для проверки значений
+        # logging.info(f"[LOG] Длительность мероприятия: {duration} часов")  # Логируем значение длительности
+        # logging.info(f"[LOG] Количество людей: {people_count}")  # Логируем значение количества людей
+        #
+        # # Добавляем лог перед вызовом функции
+        # logging.info(
+        #     f"[LOG] Вызов calculate_total_cost с параметрами: длительность={duration}, количество людей={people_count}")
 
         # Рассчитываем стоимость
         total_cost = calculate_total_cost(duration, people_count)
 
+
+        # # Логи после вызова функции
+        #
+        # logging.info(f"[LOG] Результат calculate_total_cost: {total_cost} EUR")
+
         # Обновляем запись в базе данных
+
         update_order_data(
+
             "UPDATE orders SET calculated_cost = ? WHERE user_id = ? AND session_number = ?",
+
             (total_cost, user_data.get_user_id(), session_number),
+
             user_data.get_user_id()
+
         )
 
         await query.message.reply_text(

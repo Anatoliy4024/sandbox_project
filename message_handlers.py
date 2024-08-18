@@ -467,24 +467,18 @@ def generate_order_summary(user_data):
         order_text += f"Предпочтения: {user_data.get_preferences()}\n"
     if user_data.get_city():
         order_text += f"Город: {user_data.get_city()}\n"
+    if user_data.get_person_count():
+        order_text += f"Количество персон: {user_data.get_person_count()}\n"
+    # if user_data.get_selected_date():  # Строка с датой
+    #     order_text += f"Дата: {user_data.get_selected_date()}\n"
+    if user_data.get_start_time():
+        order_text += f"Начало ивента: {user_data.get_start_time()}\n"
+    if user_data.get_duration():
+        order_text += f"Продолжительность ивента: {user_data.get_duration()} часов\n"
+        order_text += "___________________\n"
+    if user_data.get_calculated_cost():
+        order_text += f"Общая стоимость: {user_data.get_calculated_cost()} евро\n"
 
-    return order_text
-
-# Функция генерации текста ордера
-def generate_order_summary(user_data):
-    order_id = f"{user_data.get_user_id()}_{user_data.get_session_number()}"
-    order_text = f"Проверьте ваш ордер на бронирование:\n\nОрдер № {order_id}\n\n"
-
-    # Добавляем к ордеру все введенные данные
-    if user_data.get_name():
-        order_text += f"Имя клиента: {user_data.get_name()}\n"
-    if user_data.get_preferences():
-        order_text += f"Предпочтения: {user_data.get_preferences()}\n"
-    if user_data.get_city():
-        order_text += f"Город: {user_data.get_city()}\n"
-
-    # Дополнительно можно добавить любые другие данные, которые есть в user_data
-    # Например, если у вас есть дата, время, стиль вечеринки и т.д.
 
     return order_text
 

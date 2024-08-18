@@ -190,6 +190,7 @@ class UserData:
         self.style = None
         self.date = None
         self.session_number = None  # Добавляем свойство session_number
+        self.calculated_cost = None  # Добавляем новое свойство
 
     # Метод для установки значения session_number
     def set_session_number(self, session_number):
@@ -280,6 +281,14 @@ class UserData:
     def clear_time(self):
         self.start_time = None
         self.end_time = None
+
+    def set_calculated_cost(self, calculated_cost):
+        self.calculated_cost = calculated_cost
+
+    def get_calculated_cost(self):
+        return self.calculated_cost
+
+
 
     # Метод для расчета длительности
     def get_duration(self):

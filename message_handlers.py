@@ -386,56 +386,30 @@ async def handle_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
             user_data.get_user_id()
         )
 
-    context.user_data['user_data'] = user_data
+    # Переходим к следующему шагу
+    await handle_city_confirmation(update, context)
 
-    language_code = user_data.get_language()
-
-    confirmation_texts = {
-        'en': f'City: {user_data.get_city()}, correct?',
-        'ru': f'Город: {user_data.get_city()}, правильно?',
-        'es': f'Ciudad: {user_data.get_city()}, ¿correcto?',
-        'fr': f'Ville: {user_data.get_city()}, correct ?',
-        'uk': f'Місто: {user_data.get_city()}, правильно?',
-        'pl': f'Miasto: {user_data.get_city()}, poprawne?',
-        'de': f'Stadt: {user_data.get_city()}, richtig?',
-        'it': f'Città: {user_data.get_city()}, corretto?'
-    }
-
-    await update.message.reply_text(
-        confirmation_texts.get(language_code, f'City: {user_data.get_city()}, correct?'),
-        reply_markup=yes_no_keyboard(language_code)
-    )
-    user_data.set_step('city_confirmation')
 
 async def handle_city_confirmation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_data = context.user_data.get('user_data', UserData())
 
-    if user_data.get_step() == 'city_confirmation':
-        # Сохраняем введенный город
-        city = update.message.text
-        user_data.set_city(city)
+    # Текстовое сообщение с благодарностью и ожиданием расчета
+    confirmation_texts = {
+        'en': f'Thank you, {user_data.get_name()}. Please wait for the calculation.',
+        'ru': f'Спасибо, {user_data.get_name()}. Ожидайте расчет.',
+        'es': f'Gracias, {user_data.get_name()}. Por favor, espere el cálculo.',
+        'fr': f'Merci, {user_data.get_name()}. Veuillez attendre le calcul.',
+        'uk': f'Дякуємо, {user_data.get_name()}. Будь ласка, зачекайте на розрахунок.',
+        'pl': f'Dziękujemy, {user_data.get_name()}. Proszę czekać na obliczenia.',
+        'de': f'Danke, {user_data.get_name()}. Bitte warten Sie auf die Berechnung.',
+        'it': f'Grazie, {user_data.get_name()}. Attendere il calcolo.'
+    }
 
-        language_code = user_data.get_language()
+    await update.message.reply_text(
+        confirmation_texts.get(user_data.get_language(), f'Thank you. Please wait for the calculation.')
+    )
 
-        # Подтверждение сохранения данных
-        confirmation_texts = {
-            'en': f'{user_data.get_name()}, your city "{city}" has been saved. Calculating the cost for the proforma invoice.',
-            'ru': f'{user_data.get_name()}, ваш город "{city}" сохранен. Рассчитываем стоимость для выдачи вам проформы.',
-            'es': f'{user_data.get_name()}, su ciudad "{city}" ha sido guardada. Calculando el costo para emitir la proforma.',
-            'fr': f'{user_data.get_name()}, votre ville "{city}" a été enregistrée. Calcul du coût pour l\'émission de la facture proforma.',
-            'uk': f'{user_data.get_name()}, ваш місто "{city}" збережено. Розраховуємо вартість для видачі вам проформи.',
-            'pl': f'{user_data.get_name()}, twoje miasto "{city}" zostało zapisane. Obliczanie kosztu wystawienia proformy.',
-            'de': f'{user_data.get_name()}, Ihre Stadt "{city}" wurde gespeichert. Berechnung der Kosten für die Proformarechnung.',
-            'it': f'{user_data.get_name()}, la tua città "{city}" è stata salvata. Calcolo del costo per l\'emissione della fattura proforma.'
-        }
-
-        await update.message.reply_text(
-            confirmation_texts.get(language_code,
-                                   f'{user_data.get_name()}, your city "{city}" has been saved. Calculating the cost for the proforma invoice.')
-        )
-
-        user_data.set_step('data_saved')
-
+    user_data.set_step('data_saved')
 
 # Функция для получения текущей клавиатуры для шага
 def get_current_step_keyboard(step, user_data):

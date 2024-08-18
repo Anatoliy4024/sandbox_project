@@ -179,24 +179,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     logging.info("Функция start завершена")
 
+from calculations import calculate_total_cost
+
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logging.info("Функция button_callback запущена")
-
-    # Функция для расчета итоговой стоимости
-    def calculate_total_cost(duration, people_count):
-        # Базовая стоимость
-        base_cost = 160
-
-        # Дополнительные часы
-        additional_hours = max(0, duration - 2) * 20
-
-        # Дополнительные персоны
-        additional_persons = max(0, people_count - 2) * 30
-
-        # Итоговая стоимость
-        total_cost = base_cost + additional_hours + additional_persons
-
-        return total_cost
 
     # Инициализация данных пользователя
     user_data = context.user_data.get('user_data', UserData())
@@ -554,20 +540,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             user_data.get_user_id()
         )
     elif user_data.get_step() == 'city_confirmation':
-
-        if query.data == 'yes':
-            # Блокируем все кнопки выбора города
-            await query.edit_message_reply_markup(reply_markup=disable_yes_no_buttons(query.message.reply_markup))
-
-            # Переход к обработке подтверждения города
-            await handle_city_confirmation(update, context)
-
-        elif query.data == 'no':
-            # Возвращаемся к выбору города, разблокируя соответствующие кнопки
-            user_data.set_step('city_request')
-
-            # Просим пользователя ввести город
-            await query.message.reply_text("Please enter your city:")
+        await handle_city_confirmation(update, context)
 
         # Получаем данные для расчета стоимости
         duration = user_data.get_duration()

@@ -10,9 +10,7 @@ def initialize_db():
     CREATE TABLE IF NOT EXISTS users (
         user_id INTEGER PRIMARY KEY,
         username TEXT,
-        user_name TEXT,  -- Добавлено поле для хранения имени пользователя
-        language TEXT,  -- Добавлено поле для хранения языка
-         status INTEGER, 
+        status INTEGER, 
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
         )
@@ -24,6 +22,7 @@ def initialize_db():
         order_id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER,
         session_number INTEGER,  -- Добавлено поле для хранения номера сессии
+        user_name TEXT,  -- Добавлено поле для хранения имени пользователя
         language TEXT,  -- Добавлено поле для хранения языка
         selected_date TIMESTAMP,
         start_time TEXT,
@@ -31,8 +30,8 @@ def initialize_db():
         duration   INTEGER,
         people_count INTEGER,
         selected_style TEXT,
-        city TEXT,
         preferences TEXT,
+        city TEXT,
         status INTEGER,
         calculated_cost INTEGER,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

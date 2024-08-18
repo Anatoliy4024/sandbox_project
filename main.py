@@ -232,8 +232,8 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         conn = create_connection(DATABASE_PATH)
         if conn is not None:
             try:
-                update_query = "UPDATE orders SET language = ? WHERE user_id = ?"
-                update_params = (language_code, update.callback_query.from_user.id)
+                update_query = "UPDATE orders SET language = ? WHERE user_id = ? AND session_number = ?"
+                update_params = (language_code, update.callback_query.from_user.id, session_number)
                 execute_query_with_retry(conn, update_query, update_params)
             except Exception as e:
                 logging.error(f"Ошибка обновления языка в базе данных: {e}")

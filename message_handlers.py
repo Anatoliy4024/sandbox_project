@@ -429,23 +429,29 @@ async def handle_city_confirmation(update: Update, context: ContextTypes.DEFAULT
     if user_data.get_step() == 'city_request':  # Убедимся, что переходим на правильный шаг
         # Подтверждение сохранения данных
         confirmation_texts = {
-            'en': 'Thank you. Please wait for the calculation.',
-            'ru': 'Спасибо. Ожидайте расчет.',
-            'es': 'Gracias. Por favor, espere el cálculo.',
-            'fr': 'Merci. Veuillez attendre le calcul.',
-            'uk': 'Дякуємо. Будь ласка, зачекайте на розрахунок.',
-            'pl': 'Dziękujemy. Proszę czekać na obliczenia.',
-            'de': 'Danke. Bitte warten Sie auf die Berechnung.',
-            'it': 'Grazie. Attendere il calcolo.'
+            'en': "Please wait for the calculation...",
+            'ru': "Ожидайте расчета...",
+            'es': "Espere el cálculo...",
+            'fr': "Veuillez attendre le calcul...",
+            'uk': "Очікуйте розрахунку...",
+            'pl': "Proszę czekać na obliczenia...",
+            'de': "Bitte warten Sie auf die Berechnung...",
+            'it': "Attendere il calcolo..."
         }
-
-        # Отправляем сообщение "Спасибо. Ожидайте расчет."
-        await update.message.reply_text(
+        # Отправляем сообщение "Ожидайте расчета..."
+        message = await update.message.reply_text(
             confirmation_texts.get(user_data.get_language())
         )
 
         # Добавляем искусственную задержку для создания эффекта ожидания
         await asyncio.sleep(2)  # Задержка в 2 секунды
+
+        # Эффект "взрыва" перед генерацией текста ордера
+        await context.bot.edit_message_text(chat_id=message.chat_id, message_id=message.message_id, text="💥💥💥")
+        await asyncio.sleep(0.3)  # Небольшая задержка для эффекта
+
+        # Удаляем сообщение
+        await context.bot.delete_message(chat_id=message.chat_id, message_id=message.message_id)
 
         # Генерация текста ордера
         order_summary = generate_order_summary(user_data)
@@ -458,8 +464,8 @@ async def handle_city_confirmation(update: Update, context: ContextTypes.DEFAULT
 # Функция генерации текста ордера
 def generate_order_summary(user_data):
     order_id = f"{user_data.get_user_id()}_{user_data.get_session_number()}"
-    order_text = f"Проверьте ваш ордер на бронирование:\n\nОрдер № {order_id}\n\n"
-
+    order_text = f"Проверьте ваш ордер на бронирование:\n\nОрдер № {order_id}\n"
+    order_text += "____________________\n"
     # Добавляем к ордеру все введенные данные
     if user_data.get_name():
         order_text += f"Имя клиента: {user_data.get_name()}\n"
@@ -469,16 +475,15 @@ def generate_order_summary(user_data):
         order_text += f"Город: {user_data.get_city()}\n"
     if user_data.get_person_count():
         order_text += f"Количество персон: {user_data.get_person_count()}\n"
-    # if user_data.get_selected_date():  # Строка с датой
-    #     order_text += f"Дата: {user_data.get_selected_date()}\n"
+    if user_data.get_selected_date():  # Строка с датой
+        order_text += f"Дата: {user_data.get_selected_date()}\n"
     if user_data.get_start_time():
         order_text += f"Начало ивента: {user_data.get_start_time()}\n"
     if user_data.get_duration():
         order_text += f"Продолжительность ивента: {user_data.get_duration()} часов\n"
-        order_text += "___________________\n"
-    if user_data.get_calculated_cost():
-        order_text += f"Общая стоимость: {user_data.get_calculated_cost()} евро\n"
-
+    if user_data.get_calculated_cost() is not None:
+        order_text += "____________________\n"
+        order_text += f"Общая стоимость: {user_data.get_calculated_cost()} EUR\n"
 
     return order_text
 

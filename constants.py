@@ -278,6 +278,9 @@ class UserData:
     def get_date(self):
         return self.date
 
+    def get_selected_date(self):
+        return self.date
+
     def clear_time(self):
         self.start_time = None
         self.end_time = None

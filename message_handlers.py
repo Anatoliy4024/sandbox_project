@@ -463,29 +463,204 @@ async def handle_city_confirmation(update: Update, context: ContextTypes.DEFAULT
 
 # Функция генерации текста ордера
 def generate_order_summary(user_data):
+    order_texts = {
+        'en': {
+            'order_check': "Please review your booking order:",
+            'order_number': "Order №",
+            'client_name': "Client Name",
+            'preferences': "Preferences",
+            'city': "City",
+            'people_count': "Number of People",
+            'date': "Date",
+            'start_time': "Event Start Time",
+            'duration': "Event Duration",
+            'total_cost': "Total Cost",
+            'style': "Event Style"
+        },
+        'ru': {
+            'order_check': "Проверьте ваш ордер на бронирование:",
+            'order_number': "Ордер №",
+            'client_name': "Имя клиента",
+            'preferences': "Предпочтения",
+            'city': "Город",
+            'people_count': "Количество персон",
+            'date': "Дата",
+            'start_time': "Начало ивента",
+            'duration': "Продолжительность ивента",
+            'total_cost': "Общая стоимость",
+            'style': "Стиль мероприятия"
+        },
+        'es': {
+            'order_check': "Por favor, revise su orden de reserva:",
+            'order_number': "Orden №",
+            'client_name': "Nombre del cliente",
+            'preferences': "Preferencias",
+            'city': "Ciudad",
+            'people_count': "Número de personas",
+            'date': "Fecha",
+            'start_time': "Hora de inicio del evento",
+            'duration': "Duración del evento",
+            'total_cost': "Costo total",
+            'style': "Estilo del evento"
+        },
+        'fr': {
+            'order_check': "Veuillez vérifier votre commande de réservation :",
+            'order_number': "Commande №",
+            'client_name': "Nom du client",
+            'preferences': "Préférences",
+            'city': "Ville",
+            'people_count': "Nombre de personnes",
+            'date': "Date",
+            'start_time': "Heure de début de l'événement",
+            'duration': "Durée de l'événement",
+            'total_cost': "Coût total",
+            'style': "Style de l'événement"
+        },
+        'uk': {
+            'order_check': "Перевірте ваше замовлення на бронювання:",
+            'order_number': "Замовлення №",
+            'client_name': "Ім'я клієнта",
+            'preferences': "Уподобання",
+            'city': "Місто",
+            'people_count': "Кількість осіб",
+            'date': "Дата",
+            'start_time': "Час початку заходу",
+            'duration': "Тривалість заходу",
+            'total_cost': "Загальна вартість",
+            'style': "Стиль заходу"
+        },
+        'pl': {
+            'order_check': "Proszę sprawdzić swoje zamówienie na rezerwację:",
+            'order_number': "Zamówienie №",
+            'client_name': "Imię klienta",
+            'preferences': "Preferencje",
+            'city': "Miasto",
+            'people_count': "Liczba osób",
+            'date': "Data",
+            'start_time': "Czas rozpoczęcia wydarzenia",
+            'duration': "Czas trwania wydarzenia",
+            'total_cost': "Całkowity koszt",
+            'style': "Styl wydarzenia"
+        },
+        'de': {
+            'order_check': "Bitte überprüfen Sie Ihre Buchungsbestellung:",
+            'order_number': "Bestellnummer №",
+            'client_name': "Kundenname",
+            'preferences': "Vorlieben",
+            'city': "Stadt",
+            'people_count': "Anzahl der Personen",
+            'date': "Datum",
+            'start_time': "Beginn der Veranstaltung",
+            'duration': "Dauer der Veranstaltung",
+            'total_cost': "Gesamtkosten",
+            'style': "Veranstaltungsstil"
+        },
+        'it': {
+            'order_check': "Si prega di controllare il vostro ordine di prenotazione:",
+            'order_number': "Ordine №",
+            'client_name': "Nome del cliente",
+            'preferences': "Preferenze",
+            'city': "Città",
+            'people_count': "Numero di persone",
+            'date': "Data",
+            'start_time': "Orario di inizio dell'evento",
+            'duration': "Durata dell'evento",
+            'total_cost': "Costo totale",
+            'style': "Stile dell'evento"
+        }
+    }
+
+    subscript_text = {
+        'en': (
+            "Formula for calculation:\n"
+            "- Minimum cost: 2 persons for 2 hours - 160 euros\n"
+            "- Each additional person: 30 euros\n"
+            "- Each additional hour: 20 euros for all\n"
+            "- Reservation payment for date and time - 20 euros"
+        ),
+        'ru': (
+            "Формула расчета:\n"
+            "- Минимальная стоимость: 2 персоны на 2 часа - 160 евро\n"
+            "- Каждая дополнительная персона: 30 евро\n"
+            "- Каждый дополнительный час: 20 евро для всех\n"
+            "- Оплата бронирования даты и времени - 20 евро"
+        ),
+        'es': (
+            "Fórmula de cálculo:\n"
+            "- Costo mínimo: 2 personas por 2 horas - 160 euros\n"
+            "- Cada persona adicional: 30 euros\n"
+            "- Cada hora adicional: 20 euros para todos\n"
+            "- Pago de la reserva de la fecha y hora - 20 euros"
+        ),
+        'fr': (
+            "Formule de calcul:\n"
+            "- Coût minimum : 2 personnes pour 2 heures - 160 euros\n"
+            "- Chaque personne supplémentaire : 30 euros\n"
+            "- Chaque heure supplémentaire : 20 euros pour tous\n"
+            "- Paiement de réservation pour la date et l'heure - 20 euros"
+        ),
+        'uk': (
+            "Формула розрахунку:\n"
+            "- Мінімальна вартість: 2 особи на 2 години - 160 євро\n"
+            "- Кожна додаткова особа: 30 євро\n"
+            "- Кожна додаткова година: 20 євро для всіх\n"
+            "- Оплата бронювання дати та часу - 20 євро"
+        ),
+        'pl': (
+            "Formuła obliczeń:\n"
+            "- Minimalny koszt: 2 osoby na 2 godziny - 160 euro\n"
+            "- Każda dodatkowa osoba: 30 euro\n"
+            "- Każda dodatkowa godzina: 20 euro dla wszystkich\n"
+            "- Opłata rezerwacyjna za datę i czas - 20 euro"
+        ),
+        'de': (
+            "Berechnungsformel:\n"
+            "- Mindestkosten: 2 Personen für 2 Stunden - 160 Euro\n"
+            "- Jede zusätzliche Person: 30 Euro\n"
+            "- Jede zusätzliche Stunde: 20 Euro für alle\n"
+            "- Reservierungsgebühr für Datum und Uhrzeit - 20 Euro"
+        ),
+        'it': (
+            "Formula di calcolo:\n"
+            "- Costo minimo: 2 persone per 2 ore - 160 euro\n"
+            "- Ogni persona aggiuntiva: 30 euro\n"
+            "- Ogni ora aggiuntiva: 20 euro per tutti\n"
+            "- Pagamento di prenotazione per data e ora - 20 euro"
+        )
+    }
+
+    lang = user_data.get_language()
+
     order_id = f"{user_data.get_user_id()}_{user_data.get_session_number()}"
-    order_text = f"Проверьте ваш ордер на бронирование:\n\nОрдер № {order_id}\n"
+    order_text = f"{order_texts[lang]['order_check']}\n\n{order_texts[lang]['order_number']} {order_id}\n"
     order_text += "____________________\n"
+
     # Добавляем к ордеру все введенные данные
     if user_data.get_name():
-        order_text += f"Имя клиента: {user_data.get_name()}\n"
+        order_text += f"{order_texts[lang]['client_name']}: {user_data.get_name()}\n"
     if user_data.get_preferences():
-        order_text += f"Предпочтения: {user_data.get_preferences()}\n"
+        order_text += f"{order_texts[lang]['preferences']}: {user_data.get_preferences()}\n"
+    if user_data.get_style():
+        order_text += f"{order_texts[lang]['style']}: {user_data.get_style()}\n"
     if user_data.get_city():
-        order_text += f"Город: {user_data.get_city()}\n"
+        order_text += f"{order_texts[lang]['city']}: {user_data.get_city()}\n"
     if user_data.get_person_count():
-        order_text += f"Количество персон: {user_data.get_person_count()}\n"
+        order_text += f"{order_texts[lang]['people_count']}: {user_data.get_person_count()}\n"
     if user_data.get_selected_date():  # Строка с датой
-        order_text += f"Дата: {user_data.get_selected_date()}\n"
+        order_text += f"{order_texts[lang]['date']}: {user_data.get_selected_date()}\n"
     if user_data.get_start_time():
-        order_text += f"Начало ивента: {user_data.get_start_time()}\n"
+        order_text += f"{order_texts[lang]['start_time']}: {user_data.get_start_time()}\n"
     if user_data.get_duration():
-        order_text += f"Продолжительность ивента: {user_data.get_duration()} часов\n"
+        order_text += f"{order_texts[lang]['duration']}: {user_data.get_duration()} {order_texts[lang]['duration'].split()[-1]}\n"
     if user_data.get_calculated_cost() is not None:
         order_text += "____________________\n"
-        order_text += f"Общая стоимость: {user_data.get_calculated_cost()} EUR\n"
+        order_text += f"{order_texts[lang]['total_cost']}: {user_data.get_calculated_cost()} EUR\n"
+
+    # Добавляем формулу расчета в конце
+    order_text += f"\n{subscript_text[lang]}"
 
     return order_text
+
 
 # Функция для получения текущей клавиатуры для шага
 def get_current_step_keyboard(step, user_data):

@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 
 # Путь к базе данных SQLite
 DATABASE_PATH = os.path.join(os.path.dirname(__file__), 'sqlite.db')
@@ -97,6 +98,36 @@ all_headers = {
     'preferences': preferences_headers
 }
 
+# Тексты для установки времени
+time_set_texts = {
+    'start_time': {
+        'en': 'Start time set to {}. Now select end time.',
+        'ru': 'Время начала установлено на {}. Теперь выберите время окончания.',
+        'es': 'La hora de inicio se ha establecido en {}. Ahora selecciona la hora de finalización.',
+        'fr': 'L\'heure de début est fixée à {}. Maintenant, sélectionnez l\'heure de fin.',
+        'uk': 'Час початку встановлено на {}. Тепер виберіть час закінчення.',
+        'pl': 'Czas rozpoczęcia ustawiono na {}. Teraz wybierz czas zakończenia.',
+        'de': 'Startzeit auf {} gesetzt. Wählen Sie nun die Endzeit.',
+        'it': 'L\'ora di inizio è stata impostata su {}. Ora seleziona l\'ora di fine.'
+    },
+    'end_time': {
+        'en': 'End time set to {}. Confirm your selection.',
+        'ru': 'Время окончания установлено на {}. Подтвердите свой выбор.',
+        'es': 'La hora de finalización se ha establecido en {}. Confirma tu selección.',
+        'fr': 'L\'heure de fin est fixée à {}. Confirmez votre sélection.',
+        'uk': 'Час закінчення встановлено на {}. Підтвердіть свій вибір.',
+        'pl': 'Czas zakończenia ustawiono na {}. Potwierdź swój wybór.',
+        'de': 'Endzeit auf {} gesetzt. Bestätigen Sie Ihre Auswahl.',
+        'it': 'L\'ora di fine è stata impostata su {}. Conferma la tua selezione.'
+    }
+}
+
+# Статусы заказов
+ORDER_STATUS = {
+    "незаполнено": 1,
+    "заполнено для расчета": 2
+}
+
 # Класс для хранения временных данных
 class TemporaryData:
     def __init__(self):
@@ -142,6 +173,7 @@ class TemporaryData:
         self.language = None  # Метод для очистки языка
 
 
+# Класс для хранения пользовательских данных
 class UserData:
     def __init__(self, user_id=None, username=None, language='en'):
         self.user_id = user_id
@@ -150,13 +182,23 @@ class UserData:
         self.name = None
         self.preferences = None
         self.city = None
-        self.month_offset = 0  # Добавьте это свойство
+        self.month_offset = 0
         self.step = None
         self.start_time = None
         self.end_time = None
         self.person_count = None
         self.style = None
         self.date = None
+        self.session_number = None  # Добавляем свойство session_number
+        self.calculated_cost = None  # Добавляем новое свойство
+
+    # Метод для установки значения session_number
+    def set_session_number(self, session_number):
+        self.session_number = session_number
+
+    # Метод для получения значения session_number
+    def get_session_number(self):
+        return self.session_number
 
     def get_month_offset(self):
         return self.month_offset
@@ -236,31 +278,27 @@ class UserData:
     def get_date(self):
         return self.date
 
+    def get_selected_date(self):
+        return self.date
+
     def clear_time(self):
         self.start_time = None
         self.end_time = None
 
-# Другие константы и определения...
+    def set_calculated_cost(self, calculated_cost):
+        self.calculated_cost = calculated_cost
 
-time_set_texts = {
-    'start_time': {
-        'en': 'Start time set to {}. Now select end time.',
-        'ru': 'Время начала установлено на {}. Теперь выберите время окончания.',
-        'es': 'La hora de inicio se ha establecido en {}. Ahora selecciona la hora de finalización.',
-        'fr': 'L\'heure de début est fixée à {}. Maintenant, sélectionnez l\'heure de fin.',
-        'uk': 'Час початку встановлено на {}. Тепер виберіть час закінчення.',
-        'pl': 'Czas rozpoczęcia ustawiono на {}. Teraz wybierz czas zakończenia.',
-        'de': 'Startzeit auf {} gesetzt. Wählen Sie nun die Endzeit.',
-        'it': 'L\'ora di inizio è stata impostata su {}. Ora seleziona l\'ora di fine.'
-    },
-    'end_time': {
-        'en': 'End time set to {}. Confirm your selection.',
-        'ru': 'Время окончания установлено на {}. Подтвердите свой выбор.',
-        'es': 'La hora de finalización se ha establecido en {}. Confirma tu selección.',
-        'fr': 'L\'heure de fin est fixée à {}. Confirmez votre sélection.',
-        'uk': 'Час закінчення встановлено на {}. Підтвердіть свій вибір.',
-        'pl': 'Czas zakończenia ustawiono na {}. Potwierdź swój wybór.',
-        'de': 'Endzeit auf {} gesetzt. Bestätigen Sie Ihre Auswahl.',
-        'it': 'L\'ora di fine è stata impostata su {}. Conferma la tua selezione.'
-    }
-}
+    def get_calculated_cost(self):
+        return self.calculated_cost
+
+
+
+    # Метод для расчета длительности
+    def get_duration(self):
+        if self.start_time and self.end_time:
+            start_time = datetime.strptime(self.start_time, '%H:%M')
+            end_time = datetime.strptime(self.end_time, '%H:%M')
+            duration_minutes = (end_time - start_time).seconds // 60
+            duration_hours = (duration_minutes // 60) + (1 if duration_minutes % 60 != 0 else 0)
+            return duration_hours
+        return 0

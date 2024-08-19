@@ -6,10 +6,10 @@ from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, InputMe
 from telegram.ext import ApplicationBuilder, CallbackQueryHandler, CommandHandler, MessageHandler, ContextTypes, filters
 from abstract_functions import create_connection, execute_query, execute_query_with_retry
 import sqlite3
-from constants import UserData, time_selection_headers, people_selection_headers, party_styles_headers, time_set_texts
+from constants import UserData, time_selection_headers, people_selection_headers, party_styles_headers, time_set_texts,ORDER_STATUS
 from database_logger import log_message, log_query
 from keyboards import language_selection_keyboard, yes_no_keyboard, generate_calendar_keyboard, generate_time_selection_keyboard, generate_person_selection_keyboard, generate_party_styles_keyboard
-from message_handlers import handle_message, handle_city_confirmation, update_order_date, handle_name
+from message_handlers import handle_message, handle_city_confirmation, update_order_data, handle_name
 from constants import TemporaryData, DATABASE_PATH
 
 
@@ -129,29 +129,35 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     logging.info(f"Получен user_id: {user_id}, username: {username}, language: {user_data.get_language()}")
 
-    # Создайте соединение с базой данных
+    # Создаем новую запись в таблице orders с новым session_number
     conn = create_connection(DATABASE_PATH)
     if conn is not None:
         try:
-            # Проверка существования пользователя
-            logging.info(f"Проверка существования пользователя с user_id: {user_id}")
-            select_query = "SELECT 1 FROM users WHERE user_id = ?"
+            # Проверка текущего максимального session_number для user_id
+            select_query = "SELECT MAX(session_number) FROM orders WHERE user_id = ?"
             cursor = conn.cursor()
             cursor.execute(select_query, (user_id,))
-            exists = cursor.fetchone()
+            current_session = cursor.fetchone()[0]
 
-            if exists:
-                # Обновление данных пользователя
-                logging.info(f"Обновление данных пользователя: {username}")
-                update_query = "UPDATE users SET username = ?, language = ? WHERE user_id= ?"
-                update_params = (username, user_data.get_language(), user_id)
-                execute_query_with_retry(conn, update_query, update_params)
+            if current_session is None:
+                new_session_number = 1
             else:
-                # Вставка нового пользователя
-                logging.info(f"Вставка нового пользователя: {username}")
-                insert_query = "INSERT INTO users (user_id, username, language) VALUES (?, ?, ?)"
-                insert_params = (user_id, username, user_data.get_language())
-                execute_query_with_retry(conn, insert_query, insert_params)
+                new_session_number = current_session + 1
+                user_data.set_session_number(new_session_number)
+
+            # Принт для отслеживания в терминале
+            print(f"Принт: Новый session_number для user_id {user_id} = {new_session_number}")
+
+            # Создаем новую запись в таблице orders
+            insert_query = """
+                INSERT INTO orders (user_id, session_number, selected_date, start_time, end_time, duration, people_count,
+                selected_style, city, preferences, calculated_cost, status)
+                VALUES (?, ?, null, null, null, null, null, null, null, null, null, 1)
+            """
+            cursor.execute(insert_query, (user_id, new_session_number))
+            conn.commit()
+
+            logging.info(f"Создана новая запись в таблице orders для user_id: {user_id} с session_number: {new_session_number}")
 
         except Exception as e:
             logging.error(f"Ошибка базы данных: {e}")
@@ -173,21 +179,32 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     logging.info("Функция start завершена")
 
+from calculations import calculate_total_cost
 
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logging.info("Функция button_callback запущена")
 
-    query = update.callback_query
-    await query.answer()
-    logging.info("Функция ??????????????????????? запущена")
-    logging.info(query.data)
-    logging.info("Функция ??????????????????????? запущена")
-
-
-
     # Инициализация данных пользователя
     user_data = context.user_data.get('user_data', UserData())
     context.user_data['user_data'] = user_data
+
+    query = update.callback_query
+    await query.answer()
+    # Обновляем запись только для последней сессии
+    session_number_query = "SELECT MAX(session_number) FROM orders WHERE user_id = ?"
+    conn = create_connection(DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute(session_number_query, (user_data.get_user_id(),))
+    session_number = cursor.fetchone()[0]
+
+    # Проверяем, что session_number не None и является числом
+    if session_number is None:
+        logging.error("Не удалось получить session_number. Возможно, записи в базе данных отсутствуют.")
+    else:
+        logging.info(f"Используем session_number: {session_number} для обновления.")
+    logging.info("Функция ??????????????????????? запущена")
+    logging.info(query.data)
+    logging.info("Функция ??????????????????????? запущена")
 
     # Обработка выбора языка
     if query.data.startswith('lang_'):
@@ -202,8 +219,8 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         conn = create_connection(DATABASE_PATH)
         if conn is not None:
             try:
-                update_query = "UPDATE users SET language = ? WHERE user_id = ?"
-                update_params = (language_code, update.callback_query.from_user.id)
+                update_query = "UPDATE orders SET language = ? WHERE user_id = ? AND session_number = ?"
+                update_params = (language_code, update.callback_query.from_user.id, session_number)
                 execute_query_with_retry(conn, update_query, update_params)
             except Exception as e:
                 logging.error(f"Ошибка обновления языка в базе данных: {e}")
@@ -285,13 +302,13 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             user_data.set_step('preferences_request')
             preferences_request_texts = {
                 'en': 'Please write your preferences for table setting colors, food items (or exclusions), and desired table accessories (candles, glasses, etc.) - no more than 1000 characters.',
-'ru': 'Напишите свои предпочтения по цвету сервировки, продуктам (или исключениям), и желаемые аксессуары для стола (свечи, бокалы и прочее) - не более 1000 знаков.',
-'es': 'Escriba sus preferencias de colores para la mesa, artículos de comida (o exclusiones), y accesorios para la mesa (velas, copas, etc.) - no más de 1000 caracteres.',
-'fr': 'Veuillez écrire vos préférences pour les couleurs de la table, les aliments (ou exclusions), et les accessoires de table désirés (bougies, verres, etc.) - pas plus de 1000 caractères.',
-'uk': 'Напишіть свої уподобання щодо кольору сервірування, продуктів (або виключень), і бажані аксесуари для столу (свічки, келихи тощо) - не більше 1000 знаків.',
-'pl': 'Napisz swoje preferencje dotyczące kolorów nakrycia stołu, produktów spożywczych (lub wykluczeń), i pożądanych akcesoriów do stołu (świece, szklanki itp.) - nie więcej niż 1000 znaków.',
-'de': 'Bitte schreiben Sie Ihre Vorlieben für Tischfarben, Lebensmittel (oder Ausschlüsse), und gewünschte Tischaccessoires (Kerzen, Gläser usw.) - nicht mehr als 1000 Zeichen.',
-'it': 'Scrivi le tue preferenze per i colori della tavola, gli alimenti (o esclusioni), e gli accessori desiderati per la tavola (candele, bicchieri, ecc.) - non più di 1000 caratteri.'
+                'ru': 'Напишите свои предпочтения по цвету сервировки, продуктам (или исключениям), и желаемые аксессуары для стола (свечи, бокалы и прочее) - не более 1000 знаков.',
+                'es': 'Escriba sus preferencias de colores para la mesa, artículos de comida (o exclusiones), y accesorios para la mesa (velas, copas, etc.) - no más de 1000 caracteres.',
+                'fr': 'Veuillez écrire vos préférences pour les couleurs de la table, les aliments (ou exclusions), et les accessoires de table désirés (bougies, verres, etc.) - pas plus de 1000 caractères.',
+                'uk': 'Напишіть свої уподобання щодо кольору сервірування, продуктів (або виключень), і бажані аксесуари для столу (свічки, келихи тощо) - не більше 1000 знаків.',
+                'pl': 'Napisz swoje preferencje dotyczące kolorów nakrycia stołu, produktów spożywczych (lub wykluczeń), i pożądanych akcesoriów do stołu (świece, szklanki itp.) - nie więcej niż 1000 znaków.',
+                'de': 'Bitte schreiben Sie Ihre Vorlieben für Tischfarben, Lebensmittel (oder Ausschlüsse), und gewünschte Tischaccessoires (Kerzen, Gläser usw.) - nicht mehr als 1000 Zeichen.',
+                'it': 'Scrivi le tue preferenze per i colori della tavola, gli alimenti (o esclusioni), e gli accessori desiderati per la tavola (candele, bicchieri, ecc.) - non più di 1000 caratteri.'
             }
             await query.message.reply_text(
                 preferences_request_texts.get(user_data.get_language(),
@@ -356,7 +373,13 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         print(f"Принт: Выбрана дата - {selected_date}")
         user_data.set_step('date_confirmation')
         user_data.set_date(selected_date)
-        update_order_date(user_data.user_id, selected_date)
+
+        # Обновляем запись только для последней сессии
+        update_order_data(
+            "UPDATE orders SET selected_date = ? WHERE user_id = ? AND session_number = ?",
+            (selected_date, user_data.get_user_id(), session_number),
+            user_data.get_user_id()
+        )
 
         # Меняем цвет кнопки на красный и делаем все остальные кнопки неактивными
         await query.edit_message_reply_markup(
@@ -368,7 +391,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'es': f'Seleccionaste {selected_date}, ¿correcto?',
             'fr': f'Vous avez sélectionné {selected_date}, correct ?',
             'uk': f'Ви вибрали {selected_date}, правильно?',
-            'pl': f'Wybrałeś {selected_date}, poprawне?',
+            'pl': f'Wybrałeś {selected_date}, правильно?',
             'de': f'Sie haben {selected_date} gewählt, richtig?',
             'it': f'Hai selezionato {selected_date}, corretto?'
         }
@@ -379,18 +402,52 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif query.data.startswith('time_'):
         selected_time = query.data.split('_')[1]
+
         if not user_data.get_start_time():
             user_data.set_start_time(selected_time)
+
+            # Обновляем запись только для последней сессии
+            update_order_data(
+                "UPDATE orders SET start_time = ? WHERE user_id = ? AND session_number = ?",
+                (selected_time, user_data.get_user_id(), session_number),
+                user_data.get_user_id()
+            )
+
             await query.message.reply_text(
                 time_set_texts['start_time'].get(user_data.get_language(),
                                                  'Start time set to {}. Now select end time.').format(selected_time),
                 reply_markup=generate_time_selection_keyboard(user_data.get_language(), 'end',
                                                               user_data.get_start_time())
             )
+
         else:
             user_data.set_end_time(selected_time)
+
+            # Обновляем запись только для последней сессии
+            update_order_data(
+                "UPDATE orders SET end_time = ? WHERE user_id = ? AND session_number = ?",
+                (selected_time, user_data.get_user_id(), session_number),
+                user_data.get_user_id()
+            )
+
+            # === ВСТАВЛЯЕМ БЛОК ДЛЯ РАСЧЕТА ПРОДОЛЖИТЕЛЬНОСТИ ===
             start_time = datetime.strptime(user_data.get_start_time(), '%H:%M')
             end_time = datetime.strptime(user_data.get_end_time(), '%H:%M')
+            duration_minutes = (end_time - start_time).seconds // 60
+
+            # Округление до ближайшего часа
+            if duration_minutes % 60 != 0:
+                duration_hours = (duration_minutes // 60) + 1
+            else:
+                duration_hours = duration_minutes // 60
+
+            # Обновляем длительность в базе данных
+            update_order_data(
+                "UPDATE orders SET duration = ? WHERE user_id = ? AND session_number = ?",
+                (duration_hours, user_data.get_user_id(), session_number),
+                user_data.get_user_id()
+            )
+
             if (end_time - start_time).seconds >= 7200:
                 user_data.set_step('time_confirmation')
                 await query.message.reply_text(
@@ -412,7 +469,32 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_data.set_step('people_confirmation')
         user_data.set_person_count(selected_person)
 
-        # Меняем цвет кнопки на красный и делаем все остальные кнопки неактивными
+        # Обновляем запись только для последней сессии
+        update_order_data(
+            "UPDATE orders SET people_count = ? WHERE user_id = ? AND session_number = ?",
+            (int(selected_person), user_data.get_user_id(), session_number),
+            user_data.get_user_id()
+        )
+        update_order_data(
+            "UPDATE orders SET status = ? WHERE user_id = ? AND session_number = ?",
+            (ORDER_STATUS["заполнено для расчета"], user_data.get_user_id(), session_number),
+            user_data.get_user_id()
+        )
+        # Рассчитываем стоимость
+        duration = user_data.get_duration()
+        people_count = int(user_data.get_person_count())
+
+        # Рассчитываем стоимость с помощью функции calculate_total_cost (замените на свою функцию)
+        total_cost = calculate_total_cost(duration, people_count)
+        user_data.set_calculated_cost(total_cost)
+
+        # Обновляем запись в базе данных
+        update_order_data(
+            "UPDATE orders SET calculated_cost = ? WHERE user_id = ? AND session_number = ?",
+            (total_cost, user_data.get_user_id(), session_number),
+            user_data.get_user_id()
+        )
+
         await query.edit_message_reply_markup(
             reply_markup=disable_person_buttons(query.message.reply_markup, selected_person))
 
@@ -422,7 +504,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'es': f'Seleccionaste {selected_person} personas, ¿correctо?',
             'fr': f'Vous avez sélectionné {selected_person} personnes, correct ?',
             'uk': f'Ви вибрали {selected_person} людей, правильно?',
-            'pl': f'Wybrałeś {selected_person} osób, poprawне?',
+            'pl': f'Wybrałeś {selected_person} osób, правильно?',
             'de': f'Sie haben {selected_person} Personen gewählt, richtig?',
             'it': f'Hai selezionato {selected_person} persone, corretto?'
         }
@@ -436,7 +518,13 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_data.set_step('style_confirmation')
         user_data.set_style(selected_style)
 
-        # Меняем цвет кнопки на красный и делаем все остальные кнопки неактивными
+        # Обновляем запись только для последней сессии
+        update_order_data(
+            "UPDATE orders SET selected_style = ? WHERE user_id = ? AND session_number = ?",
+            (selected_style, user_data.get_user_id(), session_number),
+            user_data.get_user_id()
+        )
+
         await query.edit_message_reply_markup(
             reply_markup=disable_style_buttons(query.message.reply_markup, selected_style))
 
@@ -455,13 +543,25 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=yes_no_keyboard(user_data.get_language())
         )
 
+    # Добавляем обработку для города
+    elif user_data.get_step() == 'city_request':
+        user_data.set_city(query.data)
+
+        # Обновляем запись только для последней сессии
+        update_order_data(
+            "UPDATE orders SET city = ? WHERE user_id = ? AND session_number = ?",
+            (query.data, user_data.get_user_id(), session_number),
+            user_data.get_user_id()
+        )
+    elif user_data.get_step() == 'city_confirmation':
+        await handle_city_confirmation(update, context)
+
     elif query.data.startswith('prev_month_') or query.data.startswith('next_month_'):
         month_offset = int(query.data.split('_')[2])
         user_data.set_month_offset(month_offset)
         await show_calendar(query, month_offset, user_data.get_language())
 
     logging.info("Функция button_callback завершена")
-
 
 async def show_calendar(query, month_offset, language):
     logging.info(f"Функция show_calendar запущена с параметрами: month_offset={month_offset}, language={language}")

@@ -722,7 +722,7 @@ async def show_payment_page(update: Update, context: ContextTypes.DEFAULT_TYPE):
     language_code = user_data.get_language()
     payment_message = payment_message_texts.get(language_code, payment_message_texts['en'])
     await update.message.reply_text(payment_message)
-    await asyncio.sleep(3)
+    await asyncio.sleep(1)
     await show_proforma(update, context)
 def show_payment_page_handler(context: ContextTypes.DEFAULT_TYPE):
     user_data = context.user_data.get('user_data', UserData())
@@ -769,7 +769,7 @@ async def show_proforma(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'en': (
             "Thank you for your reservation.\n\n"
             "Your proforma invoice:\n"
-            "Proforma number: {proforma_number}\n"
+            "Number: {proforma_number}\n"
             "Date: {date}\n"
             "Time: {start_time} - {end_time}\n"
             "Number of people: {person_count}\n"
@@ -779,7 +779,7 @@ async def show_proforma(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'ru': (
             "Спасибо за резервирование.\n\n"
             "Ваша проформа:\n"
-            "Номер проформы: {proforma_number}\n"
+            "Номер: {proforma_number}\n"
             "Дата: {date}\n"
             "Время: {start_time} - {end_time}\n"
             "Количество человек: {person_count}\n"
@@ -789,7 +789,7 @@ async def show_proforma(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'es': (
             "Gracias por su reserva.\n\n"
             "Su factura proforma:\n"
-            "Número de proforma: {proforma_number}\n"
+            "Número: {proforma_number}\n"
             "Fecha: {date}\n"
             "Hora: {start_time} - {end_time}\n"
             "Número de personas: {person_count}\n"
@@ -799,7 +799,7 @@ async def show_proforma(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'fr': (
             "Merci pour votre réservation.\n\n"
             "Votre facture proforma:\n"
-            "Numéro de proforma: {proforma_number}\n"
+            "Numéro: {proforma_number}\n"
             "Date: {date}\n"
             "Heure: {start_time} - {end_time}\n"
             "Nombre de personnes: {person_count}\n"
@@ -809,7 +809,7 @@ async def show_proforma(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'uk': (
             "Дякуємо за резервування.\n\n"
             "Ваша проформа:\n"
-            "Номер проформи: {proforma_number}\n"
+            "Номер: {proforma_number}\n"
             "Дата: {date}\n"
             "Час: {start_time} - {end_time}\n"
             "Кількість людей: {person_count}\n"
@@ -819,7 +819,7 @@ async def show_proforma(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'pl': (
             "Dziękujemy za rezerwację.\n\n"
             "Twoja faktura pro forma:\n"
-            "Numer proformy: {proforma_number}\n"
+            "Numer: {proforma_number}\n"
             "Data: {date}\n"
             "Godzina: {start_time} - {end_time}\n"
             "Liczba osób: {person_count}\n"
@@ -829,7 +829,7 @@ async def show_proforma(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'de': (
             "Vielen Dank für Ihre Reservierung.\n\n"
             "Ihre Proformarechnung:\n"
-            "Proformanummer: {proforma_number}\n"
+            "Nummer: {proforma_number}\n"
             "Datum: {date}\n"
             "Zeit: {start_time} - {end_time}\n"
             "Anzahl der Personen: {person_count}\n"
@@ -839,7 +839,7 @@ async def show_proforma(update: Update, context: ContextTypes.DEFAULT_TYPE):
         'it': (
             "Grazie per la vostra prenotazione.\n\n"
             "La vostra fattura proforma:\n"
-            "Numero proforma: {proforma_number}\n"
+            "Numero: {proforma_number}\n"
             "Data: {date}\n"
             "Orario: {start_time} - {end_time}\n"
             "Numero di persone: {person_count}\n"

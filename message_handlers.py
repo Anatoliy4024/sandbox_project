@@ -458,8 +458,23 @@ async def handle_city_confirmation(update: Update, context: ContextTypes.DEFAULT
 
         # Отправляем текст ордера клиенту
         await update.message.reply_text(order_summary)
-
+        confirmation_texts = {
+            'en': "Do you want to confirm this booking?",
+            'ru': "Хочешь забронировать (Да) или изменить данные (Нет)?",
+            'es': "¿Desea confirmar esta reserva?",
+            'fr': "Voulez-vous confirmer cette réservation?",
+            'uk': "Хочеш підтвердити це бронювання?",
+            'pl': "Czy chcesz potwierdzić tę rezerwację?",
+            'de': "Möchten Sie diese Buchung bestätigen?",
+            'it': "Vuoi confermare questa prenotazione?"
+        }
+        confirmation_message = confirmation_texts.get(user_data.get_language(), confirmation_texts['en'])
         user_data.set_step('order_sent')
+        await update.message.reply_text(
+            confirmation_message,
+            reply_markup=yes_no_keyboard(user_data.get_language())
+        )
+
 
 # Функция генерации текста ордера
 def generate_order_summary(user_data):
@@ -661,6 +676,95 @@ def generate_order_summary(user_data):
 
     return order_text
 
+
+import asyncio
+
+async def show_payment_page(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_data = context.user_data.get('user_data', UserData())
+    payment_message_texts = {
+        'en': "Payment page for the reservation - 20 euros\n\n"
+              "The page is under development (technical testing). "
+              "Your proforma will be generated considering your prepayment...",
+        'ru': "Страница оплаты резерва - 20 евро\n\n"
+              "Страница в разработке (техническое тестирование). "
+              "Сейчас вам будет сформирована проформа с учетом вашей предоплаты...",
+        'es': "Página de pago de la reserva - 20 euros\n\n"
+              "La página está en desarrollo (prueba técnica). "
+              "Se generará su proforma considerando su prepago...",
+        'fr': "Page de paiement pour la réservation - 20 euros\n\n"
+              "La page est en cours de développement (test technique). "
+              "Votre proforma sera générée en tenant compte de votre prépaiement...",
+        'uk': "Сторінка оплати резерва - 20 євро\n\n"
+              "Сторінка в розробці (технічне тестування). "
+              "Зараз вам буде сформовано проформу з урахуванням вашої передоплати...",
+        'pl': "Strona płatności za rezerwację - 20 euro\n\n"
+              "Strona jest w fazie rozwoju (testy techniczne). "
+              "Twoja proforma zostanie wygenerowana z uwzględnieniem twojej przedpłaty...",
+        'de': "Zahlungsseite für die Reservierung - 20 Euro\n\n"
+              "Die Seite befindet sich in der Entwicklung (technischer Test). "
+              "Ihre Proforma wird unter Berücksichtigung Ihrer Vorauszahlung generiert...",
+        'it': "Pagina di pagamento per la prenotazione - 20 euro\n\n"
+              "La pagina è in fase di sviluppo (test tecnico). "
+              "La tua proforma sarà generata tenendo conto del tuo pagamento anticipato..."
+    }
+    language_code = user_data.get_language()
+    payment_message = payment_message_texts.get(language_code, payment_message_texts['en'])
+    await update.message.reply_text(payment_message)
+    await asyncio.sleep(3)
+    await show_proforma(update, context)
+def show_payment_page_handler(context: ContextTypes.DEFAULT_TYPE):
+    user_data = context.user_data.get('user_data', UserData())
+    payment_message_texts = {
+        'en': "Payment page for the reservation - 20 euros\n\n"
+              "The page is under development (technical testing). "
+              "Your proforma will be generated considering your prepayment...",
+        'ru': "Страница оплаты резерва - 20 евро\n\n"
+              "Страница в разработке (техническое тестирование). "
+              "Сейчас вам будет сформирована проформа с учетом вашей предоплаты...",
+        'es': "Página de pago de la reserva - 20 euros\n\n"
+              "La página está en desarrollo (prueba técnica). "
+              "Se generará su proforma considerando su prepago...",
+        'fr': "Page de paiement pour la réservation - 20 euros\n\n"
+              "La page est en cours de développement (test technique). "
+              "Votre proforma sera générée en tenant compte de votre prépaiement...",
+        'uk': "Сторінка оплати резерва - 20 євро\n\n"
+              "Сторінка в розробці (технічне тестування). "
+              "Зараз вам буде сформовано проформу з урахуванням вашої передоплати...",
+        'pl': "Strona płatności za rezerwację - 20 euro\n\n"
+              "Strona jest w fazie rozwoju (testy techniczne). "
+              "Twoja proforma zostanie wygenerowana z uwzględnieniem twojej przedpłaty...",
+        'de': "Zahlungsseite für die Reservierung - 20 Euro\n\n"
+              "Die Seite befindet sich in der Entwicklung (technischer Test). "
+              "Ihre Proforma wird unter Berücksichtigung Ihrer Vorauszahlung generiert...",
+        'it': "Pagina di pagamento per la prenotazione - 20 euro\n\n"
+              "La pagina è in fase di sviluppo (test tecnico). "
+              "La tua proforma sarà generata tenendo conto del tuo pagamento anticipato..."
+    }
+    language_code = user_data.get_language()
+    payment_message = payment_message_texts.get(language_code, payment_message_texts['en'])
+    return payment_message
+
+
+async def show_proforma(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Получаем данные пользователя
+    user_data = context.user_data.get('user_data', UserData())
+
+    # Формируем текст проформы
+    proforma_text = (
+        f"Спасибо за резервирование.\n\n"
+        f"Ваша проформа:\n"
+        f"Дата: {user_data.get_date()}\n"
+        f"Время: {user_data.get_start_time()} - {user_data.get_end_time()}\n"
+        f"Количество человек: {user_data.get_person_count()}\n"
+        f"Предоплата: 20 евро\n"
+        f"Общая сумма к оплате (с учетом предоплаты): {user_data.get_calculated_cost() - 20} евро"
+    )
+
+    # Отправляем текст проформы
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=proforma_text
+    )
 
 # Функция для получения текущей клавиатуры для шага
 def get_current_step_keyboard(step, user_data):

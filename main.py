@@ -9,8 +9,9 @@ import sqlite3
 from constants import UserData, time_selection_headers, people_selection_headers, party_styles_headers, time_set_texts,ORDER_STATUS
 from database_logger import log_message, log_query
 from keyboards import language_selection_keyboard, yes_no_keyboard, generate_calendar_keyboard, generate_time_selection_keyboard, generate_person_selection_keyboard, generate_party_styles_keyboard
-from message_handlers import handle_message, handle_city_confirmation, update_order_data, handle_name
+from message_handlers import handle_message, handle_city_confirmation, update_order_data, handle_name, show_payment_page, show_payment_page_handler, show_proforma
 from constants import TemporaryData, DATABASE_PATH
+import asyncio
 
 
 # Включаем логирование и указываем файл для логов
@@ -286,6 +287,14 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                                     "Select start and end time (minimum duration 2 hours)"),
                 reply_markup=generate_time_selection_keyboard(user_data.get_language(), 'start')
             )
+
+        elif user_data.get_step() == 'order_sent':
+            user_data.set_step('order_confirmation')
+            # await show_payment_page(update, context)
+            await query.message.reply_text(show_payment_page_handler(context))
+            await asyncio.sleep(3)
+            await show_proforma(update, context)
+
         elif user_data.get_step() == 'time_confirmation':
             user_data.set_step('people_selection')
             await query.message.reply_text(
@@ -366,6 +375,12 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await query.message.reply_text(
                 party_styles_headers.get(user_data.get_language(), 'What style do you choose?'),
                 reply_markup=generate_party_styles_keyboard(user_data.get_language())
+            )
+        elif user_data.get_step() == 'order_sent':
+            user_data.set_step('start')
+            await query.message.reply_text(
+                f"Welcome {user_data.get_username()}! Choose your language / Выберите язык / Elige tu idioma",
+                reply_markup=language_selection_keyboard()
             )
 
     elif query.data.startswith('date_'):
@@ -553,8 +568,12 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             (query.data, user_data.get_user_id(), session_number),
             user_data.get_user_id()
         )
-    elif user_data.get_step() == 'city_confirmation':
-        await handle_city_confirmation(update, context)
+    # elif user_data.get_step() == 'city_confirmation':
+    #     await handle_city_confirmation(update, context)
+    #     await show_payment_page(update, context)
+
+    elif user_data.get_step() == 'order_sent':
+        await show_payment_page(update, context)
 
     elif query.data.startswith('prev_month_') or query.data.startswith('next_month_'):
         month_offset = int(query.data.split('_')[2])

@@ -546,7 +546,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         confirmation_texts = {
             'en': f'You selected {selected_style} style, correct?',
             'ru': f'Вы выбрали стиль {selected_style}, правильно?',
-            'es': f'Seleccionaste el стиль {selected_style}, ¿correctо?',
+            'es': f'Seleccionaste el estilo {selected_style}, ¿correctо?',
             'fr': f'Vous avez sélectionné le стиль {selected_style}, correct ?',
             'uk': f'Ви вибрали стиль {selected_style}, правильно?',
             'pl': f'Wybrałeś {selected_style} стиль, правильно?',

@@ -288,8 +288,8 @@ def generate_party_styles_keyboard(language):
             ("Ужин при свечах", "Завтрак на пляже")
         ],
         'es': [
-            ("Corporativo", "Cena a la luz de las velas"),
-            ("Cumpleaños adulto", "Certificado de regalo"),
+            ("Cena de empressa", "Cena a la luz de las velas"),
+            ("Cumpleaños adulto", "Tarjeta de regalo"),
             ("Encuentro romántico", "Desayuno en la playa"),
             ("Aniversario de bodas", "Despedida de soltera"),
             ("Revelación de sexo", "Cumpleaños infantil")

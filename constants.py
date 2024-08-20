@@ -44,7 +44,7 @@ people_selection_headers = {
 party_styles_headers = {
     'en': "What style do you choose?",
     'ru': "Какой стиль вы выбираете?",
-    'es': "¿Qué estilo eliges?",
+    'es': "¿Cuál es tu evento?",
     'fr': "Quel style choisissez-vous?",
     'uk': "Який стиль ви обираєте?",
     'pl': "Jaki styl wybierasz?",

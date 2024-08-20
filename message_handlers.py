@@ -1,3 +1,4 @@
+import sqlite3
 from telegram import Update
 from telegram.ext import ContextTypes
 from keyboards import yes_no_keyboard, generate_calendar_keyboard, generate_time_selection_keyboard, generate_person_selection_keyboard, generate_party_styles_keyboard
@@ -752,6 +753,24 @@ def show_payment_page_handler(context: ContextTypes.DEFAULT_TYPE):
 async def show_proforma(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Получаем данные пользователя
     user_data = context.user_data.get('user_data', UserData())
+
+    # Получаем user_id из user_data
+    user_id = user_data.get_user_id()
+
+    # Обновляем статус пользователя в таблице users до "3"
+    conn = create_connection(DATABASE_PATH)
+    if conn is not None:
+        try:
+            update_query = "UPDATE users SET status = 3 WHERE user_id = ?"
+            cursor = conn.cursor()
+            cursor.execute(update_query,(user_id,))
+            conn.commit()
+        except sqlite3.Error as e:
+            logging.error(f"Ошибка обновления статуса в таблице users: {e}")
+        finally:
+            conn.close()
+
+    # Формируем текст проформы
 
     # Получаем номер проформы (номер ордера с добавлением статуса "_3")
     proforma_number = f"{user_data.get_user_id()}_{user_data.get_session_number()}_3"

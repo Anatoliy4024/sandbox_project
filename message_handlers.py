@@ -591,56 +591,48 @@ def generate_order_summary(user_data):
             "- Minimum cost: 2 persons for 2 hours - 160 euros\n"
             "- Each additional person: 20 euros\n"
             "- Each additional hour: 30 euros for all\n"
-            "- Reservation payment for date and time - 20 euros"
         ),
         'ru': (
             "Формула расчета:\n"
             "- Минимальная стоимость: 2 персоны на 2 часа - 160 евро\n"
             "- Каждая дополнительная персона: 20 евро\n"
             "- Каждый дополнительный час: 30 евро для всех\n"
-            "- Оплата бронирования даты и времени - 20 евро"
         ),
         'es': (
             "Fórmula de cálculo:\n"
             "- Costo mínimo: 2 personas por 2 horas - 160 euros\n"
             "- Cada persona adicional: 20 euros\n"
             "- Cada hora adicional: 30 euros para todos\n"
-            "- Pago de la reserva de la fecha y hora - 20 euros"
         ),
         'fr': (
             "Formule de calcul:\n"
             "- Coût minimum : 2 personnes pour 2 heures - 160 euros\n"
             "- Chaque personne supplémentaire : 20 euros\n"
             "- Chaque heure supplémentaire : 30 euros pour tous\n"
-            "- Paiement de réservation pour la date et l'heure - 20 euros"
         ),
         'uk': (
             "Формула розрахунку:\n"
             "- Мінімальна вартість: 2 особи на 2 години - 160 євро\n"
             "- Кожна додаткова особа: 20 євро\n"
             "- Кожна додаткова година: 30 євро для всіх\n"
-            "- Оплата бронювання дати та часу - 20 євро"
         ),
         'pl': (
             "Formuła obliczeń:\n"
             "- Minimalny koszt: 2 osoby na 2 godziny - 160 euro\n"
             "- Każda dodatkowa osoba: 20 euro\n"
             "- Każda dodatkowa godzina: 30 euro dla wszystkich\n"
-            "- Opłata rezerwacyjna za datę i czas - 20 euro"
         ),
         'de': (
             "Berechnungsformel:\n"
             "- Mindestkosten: 2 Personen für 2 Stunden - 160 Euro\n"
             "- Jede zusätzliche Person: 20 Euro\n"
             "- Jede zusätzliche Stunde: 30 Euro für alle\n"
-            "- Reservierungsgebühr für Datum und Uhrzeit - 20 Euro"
         ),
         'it': (
             "Formula di calcolo:\n"
             "- Costo minimo: 2 persone per 2 ore - 160 euro\n"
             "- Ogni persona aggiuntiva: 20 euro\n"
             "- Ogni ora aggiuntiva: 30 euro per tutti\n"
-            "- Pagamento di prenotazione per data e ora - 20 euro"
         )
     }
 

@@ -444,7 +444,7 @@ async def handle_city_confirmation(update: Update, context: ContextTypes.DEFAULT
         )
 
         # Добавляем искусственную задержку для создания эффекта ожидания
-        await asyncio.sleep(2)  # Задержка в 2 секунды
+        await asyncio.sleep(1.5)  # Задержка в 2 секунды
 
         # Эффект "взрыва" перед генерацией текста ордера
         await context.bot.edit_message_text(chat_id=message.chat_id, message_id=message.message_id, text="💥💥💥")
@@ -589,57 +589,57 @@ def generate_order_summary(user_data):
         'en': (
             "Formula for calculation:\n"
             "- Minimum cost: 2 persons for 2 hours - 160 euros\n"
-            "- Each additional person: 30 euros\n"
-            "- Each additional hour: 20 euros for all\n"
+            "- Each additional person: 20 euros\n"
+            "- Each additional hour: 30 euros for all\n"
             "- Reservation payment for date and time - 20 euros"
         ),
         'ru': (
             "Формула расчета:\n"
             "- Минимальная стоимость: 2 персоны на 2 часа - 160 евро\n"
-            "- Каждая дополнительная персона: 30 евро\n"
-            "- Каждый дополнительный час: 20 евро для всех\n"
+            "- Каждая дополнительная персона: 20 евро\n"
+            "- Каждый дополнительный час: 30 евро для всех\n"
             "- Оплата бронирования даты и времени - 20 евро"
         ),
         'es': (
             "Fórmula de cálculo:\n"
             "- Costo mínimo: 2 personas por 2 horas - 160 euros\n"
-            "- Cada persona adicional: 30 euros\n"
-            "- Cada hora adicional: 20 euros para todos\n"
+            "- Cada persona adicional: 20 euros\n"
+            "- Cada hora adicional: 30 euros para todos\n"
             "- Pago de la reserva de la fecha y hora - 20 euros"
         ),
         'fr': (
             "Formule de calcul:\n"
             "- Coût minimum : 2 personnes pour 2 heures - 160 euros\n"
-            "- Chaque personne supplémentaire : 30 euros\n"
-            "- Chaque heure supplémentaire : 20 euros pour tous\n"
+            "- Chaque personne supplémentaire : 20 euros\n"
+            "- Chaque heure supplémentaire : 30 euros pour tous\n"
             "- Paiement de réservation pour la date et l'heure - 20 euros"
         ),
         'uk': (
             "Формула розрахунку:\n"
             "- Мінімальна вартість: 2 особи на 2 години - 160 євро\n"
-            "- Кожна додаткова особа: 30 євро\n"
-            "- Кожна додаткова година: 20 євро для всіх\n"
+            "- Кожна додаткова особа: 20 євро\n"
+            "- Кожна додаткова година: 30 євро для всіх\n"
             "- Оплата бронювання дати та часу - 20 євро"
         ),
         'pl': (
             "Formuła obliczeń:\n"
             "- Minimalny koszt: 2 osoby na 2 godziny - 160 euro\n"
-            "- Każda dodatkowa osoba: 30 euro\n"
-            "- Każda dodatkowa godzina: 20 euro dla wszystkich\n"
+            "- Każda dodatkowa osoba: 20 euro\n"
+            "- Każda dodatkowa godzina: 30 euro dla wszystkich\n"
             "- Opłata rezerwacyjna za datę i czas - 20 euro"
         ),
         'de': (
             "Berechnungsformel:\n"
             "- Mindestkosten: 2 Personen für 2 Stunden - 160 Euro\n"
-            "- Jede zusätzliche Person: 30 Euro\n"
-            "- Jede zusätzliche Stunde: 20 Euro für alle\n"
+            "- Jede zusätzliche Person: 20 Euro\n"
+            "- Jede zusätzliche Stunde: 30 Euro für alle\n"
             "- Reservierungsgebühr für Datum und Uhrzeit - 20 Euro"
         ),
         'it': (
             "Formula di calcolo:\n"
             "- Costo minimo: 2 persone per 2 ore - 160 euro\n"
-            "- Ogni persona aggiuntiva: 30 euro\n"
-            "- Ogni ora aggiuntiva: 20 euro per tutti\n"
+            "- Ogni persona aggiuntiva: 20 euro\n"
+            "- Ogni ora aggiuntiva: 30 euro per tutti\n"
             "- Pagamento di prenotazione per data e ora - 20 euro"
         )
     }
@@ -661,12 +661,24 @@ def generate_order_summary(user_data):
         order_text += f"{order_texts[lang]['city']}: {user_data.get_city()}\n"
     if user_data.get_person_count():
         order_text += f"{order_texts[lang]['people_count']}: {user_data.get_person_count()}\n"
-    if user_data.get_selected_date():  # Строка с датой
+    if user_data.get_selected_date():
         order_text += f"{order_texts[lang]['date']}: {user_data.get_selected_date()}\n"
     if user_data.get_start_time():
         order_text += f"{order_texts[lang]['start_time']}: {user_data.get_start_time()}\n"
     if user_data.get_duration():
-        order_text += f"{order_texts[lang]['duration']}: {user_data.get_duration()} {order_texts[lang]['duration'].split()[-1]}\n"
+        # Преобразуем длительность в часы на основе языка
+        duration_translations = {
+            'en': 'hours',
+            'ru': 'часа',
+            'es': 'horas',
+            'fr': 'heures',
+            'uk': 'години',
+            'pl': 'godzin',
+            'de': 'Stunden',
+            'it': 'ore'
+        }
+        duration_text = f"{user_data.get_duration()} {duration_translations.get(lang, 'hours')}"
+        order_text += f"{order_texts[lang]['duration']}: {duration_text}\n"
     if user_data.get_calculated_cost() is not None:
         order_text += "____________________\n"
         order_text += f"{order_texts[lang]['total_cost']}: {user_data.get_calculated_cost()} EUR\n"
@@ -749,15 +761,101 @@ async def show_proforma(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Получаем данные пользователя
     user_data = context.user_data.get('user_data', UserData())
 
+    # Получаем номер проформы (номер ордера с добавлением статуса "_3")
+    proforma_number = f"{user_data.get_user_id()}_{user_data.get_session_number()}_3"
+
+    # Словарь для перевода на разные языки
+    proforma_texts = {
+        'en': (
+            "Thank you for your reservation.\n\n"
+            "Your proforma invoice:\n"
+            "Proforma number: {proforma_number}\n"
+            "Date: {date}\n"
+            "Time: {start_time} - {end_time}\n"
+            "Number of people: {person_count}\n"
+            "Deposit: 20 euros\n"
+            "Amount payable (excluding booking fee): {total_cost} euros"
+        ),
+        'ru': (
+            "Спасибо за резервирование.\n\n"
+            "Ваша проформа:\n"
+            "Номер проформы: {proforma_number}\n"
+            "Дата: {date}\n"
+            "Время: {start_time} - {end_time}\n"
+            "Количество человек: {person_count}\n"
+            "Предоплата: 20 евро\n"
+            "Сумма к оплате (за вычетом бронирования): {total_cost} евро"
+        ),
+        'es': (
+            "Gracias por su reserva.\n\n"
+            "Su factura proforma:\n"
+            "Número de proforma: {proforma_number}\n"
+            "Fecha: {date}\n"
+            "Hora: {start_time} - {end_time}\n"
+            "Número de personas: {person_count}\n"
+            "Depósito: 20 euros\n"
+            "Cantidad a pagar (excluyendo la tarifa de reserva): {total_cost} euros"
+        ),
+        'fr': (
+            "Merci pour votre réservation.\n\n"
+            "Votre facture proforma:\n"
+            "Numéro de proforma: {proforma_number}\n"
+            "Date: {date}\n"
+            "Heure: {start_time} - {end_time}\n"
+            "Nombre de personnes: {person_count}\n"
+            "Dépôt: 20 euros\n"
+            "Montant à payer (hors frais de réservation): {total_cost} euros"
+        ),
+        'uk': (
+            "Дякуємо за резервування.\n\n"
+            "Ваша проформа:\n"
+            "Номер проформи: {proforma_number}\n"
+            "Дата: {date}\n"
+            "Час: {start_time} - {end_time}\n"
+            "Кількість людей: {person_count}\n"
+            "Передоплата: 20 євро\n"
+            "Сума до оплати (за вирахуванням бронювання): {total_cost} євро"
+        ),
+        'pl': (
+            "Dziękujemy za rezerwację.\n\n"
+            "Twoja faktura pro forma:\n"
+            "Numer proformy: {proforma_number}\n"
+            "Data: {date}\n"
+            "Godzina: {start_time} - {end_time}\n"
+            "Liczba osób: {person_count}\n"
+            "Zadatek: 20 euro\n"
+            "Kwota do zapłaty (z wyłączeniem opłaty rezerwacyjnej): {total_cost} euro"
+        ),
+        'de': (
+            "Vielen Dank für Ihre Reservierung.\n\n"
+            "Ihre Proformarechnung:\n"
+            "Proformanummer: {proforma_number}\n"
+            "Datum: {date}\n"
+            "Zeit: {start_time} - {end_time}\n"
+            "Anzahl der Personen: {person_count}\n"
+            "Anzahlung: 20 Euro\n"
+            "Zahlungsbetrag (ohne Buchungsgebühr): {total_cost} Euro"
+        ),
+        'it': (
+            "Grazie per la vostra prenotazione.\n\n"
+            "La vostra fattura proforma:\n"
+            "Numero proforma: {proforma_number}\n"
+            "Data: {date}\n"
+            "Orario: {start_time} - {end_time}\n"
+            "Numero di persone: {person_count}\n"
+            "Acconto: 20 euro\n"
+            "Importo da pagare (esclusa la tassa di prenotazione): {total_cost} euro"
+        )
+    }
+
     # Формируем текст проформы
-    proforma_text = (
-        f"Спасибо за резервирование.\n\n"
-        f"Ваша проформа:\n"
-        f"Дата: {user_data.get_date()}\n"
-        f"Время: {user_data.get_start_time()} - {user_data.get_end_time()}\n"
-        f"Количество человек: {user_data.get_person_count()}\n"
-        f"Предоплата: 20 евро\n"
-        f"Общая сумма к оплате (с учетом предоплаты): {user_data.get_calculated_cost() - 20} евро"
+    proforma_text = proforma_texts[user_data.get_language()].format(
+        proforma_number=proforma_number,
+        date=user_data.get_selected_date(),
+        start_time=user_data.get_start_time(),
+        end_time=user_data.get_end_time(),
+        person_count=user_data.get_person_count(),
+        total_cost=user_data.get_calculated_cost() - 20
     )
 
     # Отправляем текст проформы

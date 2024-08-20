@@ -933,6 +933,37 @@ def save_user_id_to_orders(user_id):
     else:
         logging.error("Не удалось создать соединение с базой данных для работы с таблицей orders")
 
+def get_user_data(user_id):
+    """Извлекает данные пользователя из таблицы users по user_id."""
+    conn = create_connection(DATABASE_PATH)
+    user_info = None
+    if conn:
+        try:
+            select_query = "SELECT * FROM users WHERE user_id = ?"
+            cursor = conn.cursor()
+            cursor.execute(select_query, (user_id,))
+            user_info = cursor.fetchone()
+        except sqlite3.Error as e:
+            logging.error(f"Ошибка при получении данных пользователя: {e}")
+        finally:
+            conn.close()
+    return user_info
+
+def get_order_data(user_id):
+    """Извлекает данные заказа из таблицы orders по user_id."""
+    conn = create_connection(DATABASE_PATH)
+    order_info = None
+    if conn:
+        try:
+            select_query = "SELECT * FROM orders WHERE user_id = ? ORDER BY session_number DESC LIMIT 1"
+            cursor = conn.cursor()
+            cursor.execute(select_query, (user_id,))
+            order_info = cursor.fetchone()
+        except sqlite3.Error as e:
+            logging.error(f"Ошибка при получении данных заказа: {e}")
+        finally:
+            conn.close()
+    return order_info
 
 
 #№№№Функция для получения перевода на основе языка пользователя

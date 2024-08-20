@@ -848,14 +848,16 @@ async def show_proforma(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
     }
 
-    # Формируем текст проформы
-    proforma_text = proforma_texts[user_data.get_language()].format(
-        proforma_number=proforma_number,
-        date=user_data.get_selected_date(),
-        start_time=user_data.get_start_time(),
-        end_time=user_data.get_end_time(),
-        person_count=user_data.get_person_count(),
-        total_cost=user_data.get_calculated_cost() - 20
+    proforma_text = (
+        f"ПРОФОРМА № {proforma_number}\n"
+        f"_______________________\n"
+        f"ДАТА: {user_data.get_selected_date()}\n"
+        f"ВРЕМЯ: {user_data.get_start_time()} - {user_data.get_end_time()}\n"
+        f"ПЕРСОН: {user_data.get_person_count()}\n"
+        f"ПРЕДОПЛАТА: 20 евро\n"
+        f"СУММА К ОПЛАТЕ (за вычетом резерва):\n"
+        f"_______________________\n"
+        f"{user_data.get_calculated_cost() - 20} евро"
     )
 
     # Отправляем текст проформы

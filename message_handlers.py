@@ -116,8 +116,13 @@ async def handle_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 # Вставка нового пользователя в users
                 logging.info(f"Вставка нового пользователя: {user_data.get_username()}")
-                insert_query = "INSERT INTO users (user_id, username) VALUES (?, ?)"
-                insert_params = (update.message.from_user.id, user_data.get_username())
+
+                # Задаем начальные значения для status и number_of_events которые ввели для АдминБота
+                status = 0  # Начальное значение для статуса
+                number_of_events = 0  # Начальное значение для счетчика событий
+
+                insert_query = "INSERT INTO users (user_id, username, status, number_of_events) VALUES (?, ?, ?, ?)"
+                insert_params = (update.message.from_user.id, user_data.get_username(), status, number_of_events)
                 execute_query_with_retry(conn, insert_query, insert_params)
 
             # Теперь сохраняем user_id в таблицу orders
@@ -761,10 +766,11 @@ async def show_proforma(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn = create_connection(DATABASE_PATH)
     if conn is not None:
         try:
-            update_query = "UPDATE users SET status = 3 WHERE user_id = ?"
+            update_query = "UPDATE users SET status = 3, number_of_events = 1 WHERE user_id = ?"
             cursor = conn.cursor()
-            cursor.execute(update_query,(user_id,))
+            cursor.execute(update_query, (user_id,))
             conn.commit()
+            logging.info(f"User {user_id}: статус обновлен до 3, number_of_events установлен в 1.")
         except sqlite3.Error as e:
             logging.error(f"Ошибка обновления статуса в таблице users: {e}")
         finally:

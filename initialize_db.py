@@ -11,6 +11,7 @@ def initialize_db():
         user_id INTEGER PRIMARY KEY,
         username TEXT,
         status INTEGER, 
+        number_of_events INTEGER,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
         )

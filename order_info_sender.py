@@ -14,15 +14,16 @@ async def send_order_info_to_admin():
     cursor = conn.cursor()
 
     try:
-        # Шаг 1: Вытаскиваем user_id из таблицы users, где статус равен 3
-        cursor.execute("SELECT user_id FROM users WHERE status = 3")
+        # Шаг 1: Вытаскиваем user_id и number_of_events из таблицы users, где статус равен 3
+        cursor.execute("SELECT user_id, number_of_events FROM users WHERE status = 3")
         user_info = cursor.fetchone()
 
         if user_info is None:
             logging.error("No users with status 3 found.")
             return
 
-        user_id = user_info[0]  # user_id из таблицы users
+        user_id, number_of_events = user_info  # user_id и number_of_events из таблицы users
+        logging.info(f"User ID: {user_id}, Number of Events: {number_of_events}")
 
         # Шаг 2: Проверяем последний заказ пользователя в таблице orders на наличие статуса 2
         cursor.execute(
@@ -48,14 +49,8 @@ async def send_order_info_to_admin():
             f"Стиль мероприятия: {order_info[9]}\n"
             f"Город: {order_info[11]}\n"
             f"Сумма к оплате: {float(order_info[12]) - 20} евро\n"
-            
             "\n1. Я отправляю заказчику информационное подтверждение на его языке\n"
             "2. Я отправляю Администратору Ирине текст полной заявки на новый ивент с переводом на русский"
-
-
-           # "\n1. Если место ивента более чем в 15 км за Аликанте, дополнительная плата за доставку реквизита 0,5 евро за км.\n"
-
-            #"2. Всю дополнительную информацию можете узнать по вотсапу: 1234556 - Ирина."
         )
 
         # Отправляем сообщение админботу
@@ -65,14 +60,15 @@ async def send_order_info_to_admin():
         logging.info(f"Message sent to admin bot {admin_chat_id}.")
 
         # Шаг 4: Обновляем значение number_of_events и сбрасываем статус
+        new_number_of_events = number_of_events + 1  # Увеличиваем счетчик
 
-        new_number_of_events = number_of_events + 1
+        logging.info(f"New Number of Events: {new_number_of_events}")
 
         cursor.execute("UPDATE users SET number_of_events = ?, status = NULL WHERE user_id = ?",
                        (new_number_of_events, user_id))
         conn.commit()
 
-        logging.info(f"User number_of_events updated to {new_number_of_events} for user_id {user_id}.")
+        logging.info(f"User number_of_events updated to {new_number_of_events} and status set to NULL for user_id {user_id}.")
 
     except Exception as e:
         logging.error(f"Failed to send order info to admin bot: {e}")

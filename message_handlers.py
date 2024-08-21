@@ -5,10 +5,10 @@ from keyboards import yes_no_keyboard, generate_calendar_keyboard, generate_time
 from constants import UserData
 import logging
 from datetime import datetime
-
-
 from abstract_functions import create_connection, execute_query, execute_query_with_retry
 from constants import TemporaryData, DATABASE_PATH
+
+from order_info_sender import send_order_info_to_admin # функция отправки сообщений АдминБоту
 
 
 # Обработчик текстовых сообщений
@@ -877,6 +877,10 @@ async def show_proforma(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text=proforma_text
     )
 
+    # Вызов функции для отправки сообщения админботу
+    await send_order_info_to_admin()
+
+
 # Функция для получения текущей клавиатуры для шага
 def get_current_step_keyboard(step, user_data):
     language = user_data.get_language()
@@ -932,38 +936,6 @@ def save_user_id_to_orders(user_id):
             logging.info("Соединение с базой данных закрыто")
     else:
         logging.error("Не удалось создать соединение с базой данных для работы с таблицей orders")
-
-def get_user_data(user_id):
-    """Извлекает данные пользователя из таблицы users по user_id."""
-    conn = create_connection(DATABASE_PATH)
-    user_info = None
-    if conn:
-        try:
-            select_query = "SELECT * FROM users WHERE user_id = ?"
-            cursor = conn.cursor()
-            cursor.execute(select_query, (user_id,))
-            user_info = cursor.fetchone()
-        except sqlite3.Error as e:
-            logging.error(f"Ошибка при получении данных пользователя: {e}")
-        finally:
-            conn.close()
-    return user_info
-
-def get_order_data(user_id):
-    """Извлекает данные заказа из таблицы orders по user_id."""
-    conn = create_connection(DATABASE_PATH)
-    order_info = None
-    if conn:
-        try:
-            select_query = "SELECT * FROM orders WHERE user_id = ? ORDER BY session_number DESC LIMIT 1"
-            cursor = conn.cursor()
-            cursor.execute(select_query, (user_id,))
-            order_info = cursor.fetchone()
-        except sqlite3.Error as e:
-            logging.error(f"Ошибка при получении данных заказа: {e}")
-        finally:
-            conn.close()
-    return order_info
 
 
 #№№№Функция для получения перевода на основе языка пользователя

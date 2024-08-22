@@ -896,8 +896,13 @@ async def show_proforma(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Вызов функции для отправки сообщения админботу
     await send_order_info_to_admin(user_data.get_user_id(), user_data.get_session_number())
 
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=proforma_text,
 
-# Функция для получения текущей клавиатуры для шага
+    )
+
+    # Функция для получения текущей клавиатуры для шага
 def get_current_step_keyboard(step, user_data):
     language = user_data.get_language()
     if step == 'calendar':

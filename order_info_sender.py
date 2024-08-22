@@ -56,6 +56,25 @@ async def send_order_info_to_admin(user_id, session_num):
 
         logging.info(f"User !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!number_of_events updated to  and status set to NULL for user_id {user_id}.")
 
+        # Обновляем количество зарезервированных ордеров  - number_events
+
+        cursor.execute(
+            "SELECT COUNT(order_id) FROM orders WHERE user_id = ? "
+            "AND status IN (3,4)",
+            (user_id,)
+        )
+        events_num = cursor.fetchone()[0]
+
+        if order_info is None:
+            logging.error(f"No recent orders with status 3 found for user_id {user_id}.")
+            return
+
+        cursor.execute("UPDATE users SET number_of_events = ? WHERE user_id = ?",
+                       (events_num, user_id))
+        conn.commit()
+
+        logging.info(f"User !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!number_of_events updated to  and status set to NULL for user_id {user_id}.")
+
     except Exception as e:
         logging.error(f"Failed to send order info to admin bot: {e}")
         print(f"Принт: Ошибка при отправке сообщения: {e}")

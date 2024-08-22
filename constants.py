@@ -76,19 +76,6 @@ preferences_headers = {
     'it': "Specifica le tue preferenze"
 }
 
-# Статусы пользователей
-user_statuses = {
-    'active': 1,
-    'inactive': 0
-}
-
-# Статусы заказов
-order_statuses = {
-    'pending': 0,
-    'confirmed': 1,
-    'canceled': 2
-}
-
 # Словарь всех возможных заголовков для удобства
 all_headers = {
     'time_selection': time_selection_headers,
@@ -125,7 +112,10 @@ time_set_texts = {
 # Статусы заказов
 ORDER_STATUS = {
     "незаполнено": 1,
-    "заполнено для расчета": 2
+    "заполнено для расчета": 2,
+    "зарезервировано": 3,
+    "админ_бот получил соообщение": 4,
+
 }
 
 # Класс для хранения временных данных

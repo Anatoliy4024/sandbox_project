@@ -6,7 +6,7 @@ from constants import UserData
 import logging
 from datetime import datetime
 from abstract_functions import create_connection, execute_query, execute_query_with_retry
-from constants import TemporaryData, DATABASE_PATH
+from constants import TemporaryData, DATABASE_PATH, ORDER_STATUS
 
 from order_info_sender import send_order_info_to_admin # функция отправки сообщений АдминБоту
 
@@ -766,11 +766,21 @@ async def show_proforma(update: Update, context: ContextTypes.DEFAULT_TYPE):
     conn = create_connection(DATABASE_PATH)
     if conn is not None:
         try:
-            update_query = "UPDATE users SET status = 3, number_of_events = 1 WHERE user_id = ?"
+            # Проверка текущего максимального session_number для user_id
+            select_query = "SELECT MAX(session_number) FROM orders WHERE user_id = ?"
             cursor = conn.cursor()
-            cursor.execute(update_query, (user_id,))
-            conn.commit()
-            logging.info(f"User {user_id}: статус обновлен до 3, number_of_events установлен в 1.")
+            cursor.execute(select_query, (user_id,))
+            current_session = cursor.fetchone()[0]
+
+            if current_session is None:
+                logging.error(f"Ошибка обновления!!!!!!!!!!!!!!!!!!!!!!!!!! статуса в таблице users ")
+            else:
+                # update_query = "UPDATE users SET status = 3, number_of_events = 1 WHERE user_id = ?"
+                update_query = "UPDATE orders SET status = ? WHERE user_id = ? AND session_number = ?"
+                cursor = conn.cursor()
+                cursor.execute(update_query, (ORDER_STATUS["зарезервировано"], user_id, current_session,))
+                conn.commit()
+                logging.info(f"User {user_id}: статус обновлен до 3.")
         except sqlite3.Error as e:
             logging.error(f"Ошибка обновления статуса в таблице users: {e}")
         finally:
@@ -884,7 +894,7 @@ async def show_proforma(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     # Вызов функции для отправки сообщения админботу
-    await send_order_info_to_admin()
+    await send_order_info_to_admin(user_data.get_user_id(), user_data.get_session_number())
 
 
 # Функция для получения текущей клавиатуры для шага

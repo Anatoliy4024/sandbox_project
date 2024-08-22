@@ -1,9 +1,10 @@
 import sqlite3
 import logging
 from telegram import Bot
-from constants import DATABASE_PATH
+from constants import DATABASE_PATH, ORDER_STATUS
 
-async def send_order_info_to_admin():
+
+async def send_order_info_to_admin(user_id, session_num):
     """Отправляет информацию о заказе админботу."""
 
     bot_token = '7495955549:AAGG0PQNvFC-SN0PO4rx0WVi2HEeIM8mnVg'  # Токен админбота
@@ -14,31 +15,19 @@ async def send_order_info_to_admin():
     cursor = conn.cursor()
 
     try:
-        # Шаг 1: Вытаскиваем user_id и number_of_events из таблицы users, где статус равен 3
-        cursor.execute("SELECT user_id, number_of_events FROM users WHERE status = 3")
-        user_info = cursor.fetchone()
-
-        if user_info is None:
-            logging.error("No users with status 3 found.")
-            return
-
-        user_id, number_of_events = user_info  # user_id и number_of_events из таблицы users
-        logging.info(f"User ID: {user_id}, Number of Events: {number_of_events}")
-
-        # Шаг 2: Проверяем последний заказ пользователя в таблице orders на наличие статуса 2
         cursor.execute(
             "SELECT order_id, user_id, session_number, user_name, selected_date, start_time, end_time, duration,"
             " people_count, selected_style, preferences, city, calculated_cost FROM orders WHERE user_id = ? "
-            "AND status = 2 ORDER BY session_number DESC LIMIT 1",
-            (user_id,)
+            "AND status = 3 AND session_number = ?",
+            (user_id, session_num,)
         )
         order_info = cursor.fetchone()
 
         if order_info is None:
-            logging.error(f"No recent orders with status 2 found for user_id {user_id}.")
+            logging.error(f"No recent orders with status 3 found for user_id {user_id}.")
             return
 
-        # Шаг 3: Формируем сообщение для отправки админботу
+        #  Формируем сообщение для отправки админботу
         admin_message = (
             f"я получил сообщение от PicnicsAlicanteBot\n"
             f"про бронирование нового ивента:\n"
@@ -59,20 +48,17 @@ async def send_order_info_to_admin():
 
         logging.info(f"Message sent to admin bot {admin_chat_id}.")
 
-        # Шаг 4: Обновляем значение number_of_events и сбрасываем статус
-        new_number_of_events = number_of_events + 1  # Увеличиваем счетчик
+        # Обновляем статус ордера
 
-        logging.info(f"New Number of Events: {new_number_of_events}")
-
-        cursor.execute("UPDATE users SET number_of_events = ?, status = NULL WHERE user_id = ?",
-                       (new_number_of_events, user_id))
+        cursor.execute("UPDATE orders SET status = ? WHERE user_id = ? AND session_number = ?",
+                       (ORDER_STATUS["админ_бот получил соообщение"], user_id, session_num))
         conn.commit()
 
-        logging.info(f"User number_of_events updated to {new_number_of_events} and status set to NULL for user_id {user_id}.")
+        logging.info(f"User !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!number_of_events updated to  and status set to NULL for user_id {user_id}.")
 
     except Exception as e:
         logging.error(f"Failed to send order info to admin bot: {e}")
         print(f"Принт: Ошибка при отправке сообщения: {e}")
 
-    finally:
+
         conn.close()

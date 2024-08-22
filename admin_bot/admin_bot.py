@@ -1,3 +1,4 @@
+import asyncio
 import sqlite3
 import logging
 from telegram import Bot
@@ -39,8 +40,9 @@ async def send_order_info_to_admin():
 
         # Шаг 3: Формируем сообщение для отправки админботу и юзеру
         admin_message = (
-            f"я получил сообщение от PicnicsAlicanteBot\n"
-            f"про бронирование нового ивента:\n"
+            f"Привет {order_info[3]}!  Я - AdminPicnicsAlicante.\n(https://t.me/AssistPicnicsBot)\n"
+            f"Отправляю тебе подтверждение резервирования твоего ивента:\n"
+            "_______________________________________\n"
             f"ПРОФОРМА № {order_info[1]}_{order_info[2]}_3\n"
             f"Дата мероприятия: {order_info[4]}\n"
             f"Время: {order_info[5]} - {order_info[6]}\n"
@@ -49,7 +51,10 @@ async def send_order_info_to_admin():
             f"Город: {order_info[11]}\n"
             f"Сумма к оплате: {float(order_info[12]) - 20} евро\n"
             "\n1. Если место ивента более чем в 15 км за Аликанте, дополнительная плата за доставку реквизита 0,5 евро за км.\n"
-            "2. Всю дополнительную информацию можете узнать по вотсапу: 1234556 - Ирина."
+            "2. Всю дополнительную информацию можете узнать по вотсапу: 1234556 - Ирина.\n"
+            "3. Я напомню тебе за 3 дня до начала и накануне вечером.\n"
+            "Спасибо за использование автоматического резервирования!\n"
+            "Хорошего дня!"
         )
 
         # Отправляем сообщение админботу
@@ -68,3 +73,9 @@ async def send_order_info_to_admin():
 
     finally:
         conn.close()
+
+
+
+
+if __name__ == '__main__':
+    asyncio.run(send_order_info_to_admin())

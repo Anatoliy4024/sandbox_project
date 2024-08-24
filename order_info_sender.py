@@ -29,15 +29,15 @@ async def send_order_info_to_admin(user_id, session_num):
 
         #  Формируем сообщение для отправки админботу
         admin_message = (
-            f"я получил сообщение от PicnicsAlicanteBot\n"
+            f"Пришло сообщение от PicnicsAlicanteBot\n"
             f"про бронирование нового ивента:\n"
             f"ПРОФОРМА № {order_info[1]}_{order_info[2]}_3\n"
-            f"Дата мероприятия: {order_info[4]}\n"
-            f"Время: {order_info[5]} - {order_info[6]}\n"
-            f"Количество персон: {order_info[8]}\n"
-            f"Стиль мероприятия: {order_info[9]}\n"
-            f"Город: {order_info[11]}\n"
-            f"Сумма к оплате: {float(order_info[12]) - 20} евро\n"
+            # f"Дата мероприятия: {order_info[4]}\n"
+            # f"Время: {order_info[5]} - {order_info[6]}\n"
+            # f"Количество персон: {order_info[8]}\n"
+            # f"Стиль мероприятия: {order_info[9]}\n"
+            # f"Город: {order_info[11]}\n"
+            # f"Сумма к оплате: {float(order_info[12]) - 20} евро\n"
             "\n1. Я отправляю заказчику информационное подтверждение на его языке\n"
             "2. Я отправляю Администратору Ирине текст полной заявки на новый ивент с переводом на русский"
         )

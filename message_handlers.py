@@ -7,6 +7,8 @@ import logging
 from datetime import datetime
 from abstract_functions import create_connection, execute_query, execute_query_with_retry
 from constants import TemporaryData, DATABASE_PATH, ORDER_STATUS
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
 
 from order_info_sender import send_order_info_to_admin # функция отправки сообщений АдминБоту
 
@@ -754,7 +756,6 @@ def show_payment_page_handler(context: ContextTypes.DEFAULT_TYPE):
     payment_message = payment_message_texts.get(language_code, payment_message_texts['en'])
     return payment_message
 
-
 async def show_proforma(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Получаем данные пользователя
     user_data = context.user_data.get('user_data', UserData())
@@ -762,7 +763,7 @@ async def show_proforma(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Получаем user_id из user_data
     user_id = user_data.get_user_id()
 
-    # Обновляем статус пользователя в таблице users до "3"
+    # Обновляем статус пользователя в таблице orders до "зарезервировано"
     conn = create_connection(DATABASE_PATH)
     if conn is not None:
         try:
@@ -773,134 +774,146 @@ async def show_proforma(update: Update, context: ContextTypes.DEFAULT_TYPE):
             current_session = cursor.fetchone()[0]
 
             if current_session is None:
-                logging.error(f"Ошибка обновления!!!!!!!!!!!!!!!!!!!!!!!!!! статуса в таблице users ")
+                logging.error(f"Ошибка обновления статуса в таблице orders для user_id {user_id}")
             else:
-                # update_query = "UPDATE users SET status = 3, number_of_events = 1 WHERE user_id = ?"
+                # Обновляем статус заказа
                 update_query = "UPDATE orders SET status = ? WHERE user_id = ? AND session_number = ?"
-                cursor = conn.cursor()
                 cursor.execute(update_query, (ORDER_STATUS["зарезервировано"], user_id, current_session,))
                 conn.commit()
-                logging.info(f"User {user_id}: статус обновлен до 3.")
+                logging.info(f"User {user_id}: статус обновлен до 'зарезервировано'.")
         except sqlite3.Error as e:
-            logging.error(f"Ошибка обновления статуса в таблице users: {e}")
+            logging.error(f"Ошибка обновления статуса в таблице orders: {e}")
         finally:
             conn.close()
-
-    # Формируем текст проформы
 
     # Получаем номер проформы (номер ордера с добавлением статуса "_3")
     proforma_number = f"{user_data.get_user_id()}_{user_data.get_session_number()}_3"
 
-    # Словарь для перевода на разные языки
+    # Тексты проформы на разных языках
     proforma_texts = {
         'en': (
-            "Thank you for your reservation.\n\n"
-            "Your proforma invoice:\n"
-            "Number: {proforma_number}\n"
-            "Date: {date}\n"
-            "Time: {start_time} - {end_time}\n"
-            "Number of people: {person_count}\n"
-            "Deposit: 20 euros\n"
-            "Amount payable (excluding booking fee): {total_cost} euros"
+            f"PROFORMA № {proforma_number}\n"
+            f"_______________________\n"
+            f"DATE: {user_data.get_selected_date()}\n"
+            f"TIME: {user_data.get_start_time()} - {user_data.get_end_time()}\n"
+            f"PEOPLE: {user_data.get_person_count()}\n"
+            f"PREPAYMENT: 20 euros\n"
+            f"AMOUNT TO PAY (excluding reservation):\n"
+            f"_______________________\n"
+            f"{user_data.get_calculated_cost() - 20} euros"
         ),
         'ru': (
-            "Спасибо за резервирование.\n\n"
-            "Ваша проформа:\n"
-            "Номер: {proforma_number}\n"
-            "Дата: {date}\n"
-            "Время: {start_time} - {end_time}\n"
-            "Количество человек: {person_count}\n"
-            "Предоплата: 20 евро\n"
-            "Сумма к оплате (за вычетом бронирования): {total_cost} евро"
+            f"ПРОФОРМА № {proforma_number}\n"
+            f"_______________________\n"
+            f"ДАТА: {user_data.get_selected_date()}\n"
+            f"ВРЕМЯ: {user_data.get_start_time()} - {user_data.get_end_time()}\n"
+            f"ПЕРСОН: {user_data.get_person_count()}\n"
+            f"ПРЕДОПЛАТА: 20 евро\n"
+            f"СУММА К ОПЛАТЕ (за вычетом резерва):\n"
+            f"_______________________\n"
+            f"{user_data.get_calculated_cost() - 20} евро"
         ),
         'es': (
-            "Gracias por su reserva.\n\n"
-            "Su factura proforma:\n"
-            "Número: {proforma_number}\n"
-            "Fecha: {date}\n"
-            "Hora: {start_time} - {end_time}\n"
-            "Número de personas: {person_count}\n"
-            "Depósito: 20 euros\n"
-            "Cantidad a pagar (excluyendo la tarifa de reserva): {total_cost} euros"
+            f"PROFORMA N.º {proforma_number}\n"
+            f"_______________________\n"
+            f"FECHA: {user_data.get_selected_date()}\n"
+            f"HORA: {user_data.get_start_time()} - {user_data.get_end_time()}\n"
+            f"PERSONAS: {user_data.get_person_count()}\n"
+            f"PREPAGO: 20 euros\n"
+            f"CANTIDAD A PAGAR (excluyendo reserva):\n"
+            f"_______________________\n"
+            f"{user_data.get_calculated_cost() - 20} euros"
         ),
         'fr': (
-            "Merci pour votre réservation.\n\n"
-            "Votre facture proforma:\n"
-            "Numéro: {proforma_number}\n"
-            "Date: {date}\n"
-            "Heure: {start_time} - {end_time}\n"
-            "Nombre de personnes: {person_count}\n"
-            "Dépôt: 20 euros\n"
-            "Montant à payer (hors frais de réservation): {total_cost} euros"
+            f"PROFORMA N° {proforma_number}\n"
+            f"_______________________\n"
+            f"DATE: {user_data.get_selected_date()}\n"
+            f"HEURE: {user_data.get_start_time()} - {user_data.get_end_time()}\n"
+            f"PERSONNES: {user_data.get_person_count()}\n"
+            f"PRÉPAYEMENT: 20 euros\n"
+            f"MONTANT À PAYER (hors réservation):\n"
+            f"_______________________\n"
+            f"{user_data.get_calculated_cost() - 20} euros"
         ),
         'uk': (
-            "Дякуємо за резервування.\n\n"
-            "Ваша проформа:\n"
-            "Номер: {proforma_number}\n"
-            "Дата: {date}\n"
-            "Час: {start_time} - {end_time}\n"
-            "Кількість людей: {person_count}\n"
-            "Передоплата: 20 євро\n"
-            "Сума до оплати (за вирахуванням бронювання): {total_cost} євро"
+            f"ПРОФОРМА № {proforma_number}\n"
+            f"_______________________\n"
+            f"ДАТА: {user_data.get_selected_date()}\n"
+            f"ЧАС: {user_data.get_start_time()} - {user_data.get_end_time()}\n"
+            f"ЛЮДЕЙ: {user_data.get_person_count()}\n"
+            f"ПЕРЕДОПЛАТА: 20 євро\n"
+            f"СУМА ДО СПЛАТИ (за вирахуванням резерву):\n"
+            f"_______________________\n"
+            f"{user_data.get_calculated_cost() - 20} євро"
         ),
         'pl': (
-            "Dziękujemy za rezerwację.\n\n"
-            "Twoja faktura pro forma:\n"
-            "Numer: {proforma_number}\n"
-            "Data: {date}\n"
-            "Godzina: {start_time} - {end_time}\n"
-            "Liczba osób: {person_count}\n"
-            "Zadatek: 20 euro\n"
-            "Kwota do zapłaty (z wyłączeniem opłaty rezerwacyjnej): {total_cost} euro"
+            f"PROFORMA NR {proforma_number}\n"
+            f"_______________________\n"
+            f"DATA: {user_data.get_selected_date()}\n"
+            f"GODZINA: {user_data.get_start_time()} - {user_data.get_end_time()}\n"
+            f"LUDZI: {user_data.get_person_count()}\n"
+            f"PRZEDPŁATA: 20 euro\n"
+            f"KWOTA DO ZAPŁATY (z wyłączeniem rezerwacji):\n"
+            f"_______________________\n"
+            f"{user_data.get_calculated_cost() - 20} euro"
         ),
         'de': (
-            "Vielen Dank für Ihre Reservierung.\n\n"
-            "Ihre Proformarechnung:\n"
-            "Nummer: {proforma_number}\n"
-            "Datum: {date}\n"
-            "Zeit: {start_time} - {end_time}\n"
-            "Anzahl der Personen: {person_count}\n"
-            "Anzahlung: 20 Euro\n"
-            "Zahlungsbetrag (ohne Buchungsgebühr): {total_cost} Euro"
+            f"PROFORMA NR {proforma_number}\n"
+            f"_______________________\n"
+            f"DATUM: {user_data.get_selected_date()}\n"
+            f"ZEIT: {user_data.get_start_time()} - {user_data.get_end_time()}\n"
+            f"PERSONEN: {user_data.get_person_count()}\n"
+            f"VORAUSZAHLUNG: 20 Euro\n"
+            f"BETRAG ZUR ZAHLUNG (ohne Reservierung):\n"
+            f"_______________________\n"
+            f"{user_data.get_calculated_cost() - 20} Euro"
         ),
         'it': (
-            "Grazie per la vostra prenotazione.\n\n"
-            "La vostra fattura proforma:\n"
-            "Numero: {proforma_number}\n"
-            "Data: {date}\n"
-            "Orario: {start_time} - {end_time}\n"
-            "Numero di persone: {person_count}\n"
-            "Acconto: 20 euro\n"
-            "Importo da pagare (esclusa la tassa di prenotazione): {total_cost} euro"
+            f"PROFORMA N. {proforma_number}\n"
+            f"_______________________\n"
+            f"DATA: {user_data.get_selected_date()}\n"
+            f"ORARIO: {user_data.get_start_time()} - {user_data.get_end_time()}\n"
+            f"PERSONE: {user_data.get_person_count()}\n"
+            f"ANTICIPO: 20 euro\n"
+            f"IMPORTO DA PAGARE (esclusa la prenotazione):\n"
+            f"_______________________\n"
+            f"{user_data.get_calculated_cost() - 20} euro"
         )
     }
 
-    proforma_text = (
-        f"ПРОФОРМА № {proforma_number}\n"
-        f"_______________________\n"
-        f"ДАТА: {user_data.get_selected_date()}\n"
-        f"ВРЕМЯ: {user_data.get_start_time()} - {user_data.get_end_time()}\n"
-        f"ПЕРСОН: {user_data.get_person_count()}\n"
-        f"ПРЕДОПЛАТА: 20 евро\n"
-        f"СУММА К ОПЛАТЕ (за вычетом резерва):\n"
-        f"_______________________\n"
-        f"{user_data.get_calculated_cost() - 20} евро"
-    )
+    # Определяем язык и текст проформы
+    language_code = user_data.get_language()
+    proforma_text = proforma_texts.get(language_code, proforma_texts['ru'])  # Используем русский текст по умолчанию
 
-    # Отправляем текст проформы
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=proforma_text
-    )
+    # Текст кнопки на разных языках
+    button_texts = {
+        'en': "Complete Booking and Get PROFORMA",
+        'ru': "Завершить бронирование и получить ПРОФОРМУ",
+        'es': "Completar reserva y obtener PROFORMA",
+        'fr': "Terminer la réservation et obtenir la PROFORMA",
+        'uk': "Завершити бронювання та отримати ПРОФОРМУ",
+        'pl': "Zakończ rezerwację i uzyskaj PROFORMĘ",
+        'de': "Buchung abschließen und PROFORMA erhalten",
+        'it': "Completa la prenotazione e ottieni la PROFORMA"
+    }
+
+    language_code = user_data.get_language()
+    button_text = button_texts.get(language_code, button_texts['en'])  # Используем английский текст по умолчанию
+
+    # Ссылка на админбот с автоматическим запуском команды /start
+    admin_bot_username = "AssistPicnicsBot"  # Убираем символ '@'
+    admin_bot_link = f"https://t.me/{admin_bot_username}?start=start"
+
+    # Создание кнопки
+    button = InlineKeyboardButton(button_text, url=admin_bot_link)
+
+    # Добавление кнопки в разметку и отправка пользователю
+    reply_markup = InlineKeyboardMarkup([[button]])
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=proforma_text, reply_markup=reply_markup)
 
     # Вызов функции для отправки сообщения админботу
     await send_order_info_to_admin(user_data.get_user_id(), user_data.get_session_number())
 
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=proforma_text,
-
-    )
 
     # Функция для получения текущей клавиатуры для шага
 def get_current_step_keyboard(step, user_data):

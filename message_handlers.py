@@ -10,7 +10,7 @@ from constants import TemporaryData, DATABASE_PATH, ORDER_STATUS
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 
-from order_info_sender import send_order_info_to_admin # функция отправки сообщений АдминБоту
+from order_info_sender import send_order_info_to_admin, send_message_to_irina # функция отправки сообщений АдминБоту и Ирине
 
 
 # Обработчик текстовых сообщений
@@ -913,6 +913,9 @@ async def show_proforma(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Вызов функции для отправки сообщения админботу
     await send_order_info_to_admin(user_data.get_user_id(), user_data.get_session_number())
+
+    # Вызов функции для отправки сообщения Ирине
+    await send_message_to_irina(user_data.get_user_id(), user_data.get_session_number())
 
 
     # Функция для получения текущей клавиатуры для шага

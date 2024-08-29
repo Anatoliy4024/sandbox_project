@@ -1,6 +1,14 @@
+
+from calendar_reserve import reserved_date
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from datetime import datetime, timedelta
 import calendar
+
+import logging
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 
 def to_superscript(num_str):
     """Конвертирует строку цифр в надстрочные цифры."""
@@ -22,92 +30,6 @@ def generate_month_name(month, language):
     return months[language][month - 1]
 
 
-
-def generate_calendar_keyboard(month_offset=0, language='en'):
-    today = datetime.today()
-    base_month = today.month + month_offset
-    base_year = today.year
-
-    if base_month > 12:
-        base_month -= 12
-        base_year += 1
-    elif base_month < 1:
-        base_month += 12
-        base_year -= 1
-
-    first_of_month = datetime(base_year, base_month, 1)
-    last_day = calendar.monthrange(first_of_month.year, first_of_month.month)[1]
-    last_of_month = first_of_month.replace(day=last_day)
-
-    month_name = generate_month_name(first_of_month.month, language)
-
-    days_of_week = {
-        'en': ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-        'ru': ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"],
-        'es': ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
-        'fr': ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"],
-        'uk': ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"],
-        'pl': ["Pon", "Wt", "Śr", "Czw", "Pią", "Sob", "Niedz"],
-        'de': ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"],
-        'it': ["Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom"]
-    }
-    # Создаем календарь кнопок
-    calendar_buttons = []
-
-    # Создаем строку с кнопками переключения месяцев и названием месяца
-    prev_month_button = InlineKeyboardButton("<",
-                                             callback_data=f"prev_month_{month_offset - 1}") if month_offset > -1 else InlineKeyboardButton(
-        " ", callback_data="none")
-    next_month_button = InlineKeyboardButton(">",
-                                             callback_data=f"next_month_{month_offset + 1}") if month_offset < 2 else InlineKeyboardButton(
-        " ", callback_data="none")
-    month_name_button = InlineKeyboardButton(f"{month_name} {first_of_month.year}", callback_data='none')
-
-    calendar_buttons.append([prev_month_button, month_name_button, next_month_button])
-
-    # Создаем календарь кнопок
-    #calendar_buttons = []
-
-    # Добавляем строку с названием месяца
-    calendar_buttons.append([InlineKeyboardButton(f"{month_name} {first_of_month.year}", callback_data='none')])
-
-    # Добавляем дни недели в первую колонку
-    calendar_buttons = [[InlineKeyboardButton(day, callback_data='none')] for day in days_of_week[language]]
-
-    start_weekday = first_of_month.weekday()
-    current_date = first_of_month
-
-    # Заполняем календарь днями месяца
-    for _ in range(5):
-        for day in range(len(calendar_buttons)):
-            if current_date.day == 1 and day < start_weekday:
-                calendar_buttons[day].append(InlineKeyboardButton(" ", callback_data='none'))
-            elif current_date > last_of_month:
-                calendar_buttons[day].append(InlineKeyboardButton(" ", callback_data='none'))
-            else:
-                if current_date <= today:
-                    calendar_buttons[day].append(InlineKeyboardButton(f"🔻 {current_date.day}", callback_data='none'))
-                else:
-                    calendar_buttons[day].append(InlineKeyboardButton(f" {current_date.day}",
-                                                                      callback_data=f'date_{current_date.strftime("%Y-%m-%d")}'))
-                current_date += timedelta(days=1)
-
-    prev_month_button = InlineKeyboardButton("<",
-                                             callback_data=f"prev_month_{month_offset - 1}") if month_offset > -1 else InlineKeyboardButton(
-        " ", callback_data="none")
-    next_month_button = InlineKeyboardButton(">",
-                                             callback_data=f"next_month_{month_offset + 1}") if month_offset < 2 else InlineKeyboardButton(
-        " ", callback_data="none")
-
-    # Добавляем кнопки переключения месяцев в последнюю строку
-    calendar_buttons.append([prev_month_button, next_month_button])
-
-    return InlineKeyboardMarkup(calendar_buttons)
-
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton
-from datetime import datetime, timedelta
-import calendar
-
 def generate_calendar_keyboard(month_offset=0, language='en'):
     today = datetime.today()
     base_month = today.month + month_offset
@@ -154,8 +76,11 @@ def generate_calendar_keyboard(month_offset=0, language='en'):
             elif current_date > last_of_month:
                 calendar_buttons[day].append(InlineKeyboardButton(" ", callback_data='none'))
             else:
-                if current_date <= today:
-                    # Используем to_superscript для преобразования дня в надстрочные цифры
+                logging.info(f"Обработка даты: {current_date}")
+
+                # Вызов функции reserved_date для проверки количества заказов на дату
+                if current_date <= today or reserved_date(current_date):
+                    logging.info(f"Дата {current_date.date()} зарезервирована или прошла, добавляется 🔻")
                     day_text = to_superscript(str(current_date.day))
                     calendar_buttons[day].append(InlineKeyboardButton(f"🔻 {day_text}", callback_data='none'))
                 else:

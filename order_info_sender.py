@@ -31,7 +31,7 @@ async def send_order_info_to_admin(user_id, session_num):
 
         # Формируем сообщение для отправки админботу
         admin_message = (
-            f"Привет твой id 542067858 соответствует\n"
+            f"Привет твой id-542067858 соответствует\n"
             f"номеру Сервисной службы AdminPicnicsAlicanteBot\n"
             f"https://t.me/AssistPicnicsBot\n"
             f"Сейчас пришло сообщение от PicnicsAlicanteBot:\n"
@@ -46,7 +46,7 @@ async def send_order_info_to_admin(user_id, session_num):
             f"____________________\n"
             f"\n"
             f"\n"
-            f"Можно открыть заказ с помощью кнопок меню. Если кнопок нет - жми /start"
+            f"Если ты не видишь кнопок меню-жми /start"
 
         )
 
@@ -58,7 +58,7 @@ async def send_order_info_to_admin(user_id, session_num):
         # Обновляем статус ордера
         logging.info(f"Updating order status for user_id: {user_id}, session_number: {session_num}")
         cursor.execute("UPDATE orders SET status = ? WHERE user_id = ? AND session_number = ?",
-                       (ORDER_STATUS["админ_бот получил соообщение"], user_id, session_num))
+                       (ORDER_STATUS["4-Ирина и Сервисная служба получили сообщение о новой ПРОФОРМЕ"], user_id, session_num))
         conn.commit()
 
         logging.info(f"Order status updated for user_id: {user_id}, session_number: {session_num}")

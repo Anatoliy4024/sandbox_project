@@ -17,7 +17,7 @@
   </component>
   <component name="DBNavigator.Project.DatabaseConsoleManager">
     <connection id="e1848959-1962-4e92-9f51-e834dc9283fd">
-      <console name="Sqlite" type="STANDARD" schema="" session="Main"><![CDATA[SELECT * FROM orders]]></console>
+      <console name="Sqlite" type="STANDARD" schema="" session="Main" />
     </connection>
   </component>
   <component name="DBNavigator.Project.DatabaseEditorStateManager">

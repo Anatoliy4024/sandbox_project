@@ -278,6 +278,18 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif query.data == 'yes':
         if user_data.get_step() == 'name_received':
+            # Обновляем имя введенное юзером в базе данных
+            conn = create_connection(DATABASE_PATH)
+            if conn is not None:
+                try:
+                    update_query = "UPDATE orders SET user_name = ? WHERE user_id = ? AND session_number = ?"
+                    update_params = (user_data.get_name(), update.callback_query.from_user.id, session_number)
+                    execute_query_with_retry(conn, update_query, update_params)
+                except Exception as e:
+                    logging.error(f"Ошибка обновления языка в базе данных: {e}")
+                finally:
+                    conn.close()
+
             user_data.set_step('calendar')
             await show_calendar(query, user_data.get_month_offset(), user_data.get_language())
         elif user_data.get_step() == 'date_confirmation':
@@ -427,6 +439,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 (selected_time, user_data.get_user_id(), session_number),
                 user_data.get_user_id()
             )
+            time.sleep(1)  # Задержка перед повторной попыткой
 
             await query.message.reply_text(
                 time_set_texts['start_time'].get(user_data.get_language(),
@@ -492,7 +505,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         update_order_data(
             "UPDATE orders SET status = ? WHERE user_id = ? AND session_number = ?",
-            (ORDER_STATUS["заполнено для расчета"], user_data.get_user_id(), session_number),
+            (ORDER_STATUS["2-заполнено для расчета"], user_data.get_user_id(), session_number),
             user_data.get_user_id()
         )
         # Рассчитываем стоимость

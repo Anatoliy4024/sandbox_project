@@ -10,6 +10,7 @@ from constants import TemporaryData, DATABASE_PATH, ORDER_STATUS
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 
+
 from order_info_sender import send_order_info_to_admin, send_message_to_irina # функция отправки сообщений АдминБоту и Ирине
 
 
@@ -128,7 +129,7 @@ async def handle_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 execute_query_with_retry(conn, insert_query, insert_params)
 
             # Теперь сохраняем user_id в таблицу orders
-            save_user_id_to_orders(update.message.from_user.id)
+            save_user_id_to_orders(update.message.from_user.id, user_data.get_name())
             print(f"Принт 9: user_id {update.message.from_user.id} сохранен в таблицу orders")
 
         except Exception as e:
@@ -760,7 +761,7 @@ async def show_proforma(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Получаем данные пользователя
     user_data = context.user_data.get('user_data', UserData())
 
-    # Получаем user_id из user_data
+       # Получаем user_id из user_data
     user_id = user_data.get_user_id()
 
     # Обновляем статус пользователя в таблице orders до "зарезервировано"
@@ -778,7 +779,7 @@ async def show_proforma(update: Update, context: ContextTypes.DEFAULT_TYPE):
             else:
                 # Обновляем статус заказа
                 update_query = "UPDATE orders SET status = ? WHERE user_id = ? AND session_number = ?"
-                cursor.execute(update_query, (ORDER_STATUS["зарезервировано"], user_id, current_session,))
+                cursor.execute(update_query, (ORDER_STATUS["3-зарезервировано - заказчик оплатил аванс"], user_id, current_session,))
                 conn.commit()
                 logging.info(f"User {user_id}: статус обновлен до 'зарезервировано'.")
         except sqlite3.Error as e:
@@ -946,7 +947,7 @@ translations = {
     'pl': "Proszę użyć przycisków"
 }
 
-def save_user_id_to_orders(user_id):
+def save_user_id_to_orders(user_id,user_n):
     """Сохраняет user_id в таблицу orders с начальным значением null для даты."""
     conn = create_connection(DATABASE_PATH)
     if conn is not None:
@@ -961,8 +962,8 @@ def save_user_id_to_orders(user_id):
                 logging.info(f"Запись для user_id {user_id} уже существует в таблице orders.")
             else:
                 logging.info(f"Вставка нового user_id {user_id} с null датой в таблицу orders.")
-                insert_query = "INSERT INTO orders (user_id, selected_date) VALUES (?, ?)"
-                cursor.execute(insert_query, (user_id, None))  # Передаем None для заполнения null в базе данных
+                insert_query = "INSERT INTO orders (user_id, user_name, selected_date) VALUES (?, ?, ?)"
+                cursor.execute(insert_query, (user_id, user_n, None))  # Передаем None для заполнения null в базе данных
                 conn.commit()
                 logging.info(f"user_id {user_id} успешно добавлен в таблицу orders с null датой.")
 
@@ -979,3 +980,4 @@ def save_user_id_to_orders(user_id):
 def get_translation(user_data, key):
     language_code = user_data.get_language()  # Получаем код языка пользователя
     return translations.get(language_code, translations['en'])  # Возвращаем перевод или английский по умолчанию
+

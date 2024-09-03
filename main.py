@@ -51,10 +51,10 @@ def add_username_column():
 
 # Пути к видеофайлам
 VIDEO_PATHS = [
-    'media/IMG_5981 (online-video-cutter.com).mp4',
-    'media/IMG_6156 (online-video-cutter.com).mp4',
-    'media/IMG_4077_1 (online-video-cutter.com).mp4',
-    'media/IMG_6412 (online-video-cutter.com).mp4'
+    r'C:\Users\USER\PycharmProjects\sandbox_project\media\IMG_4077_1 (online-video-cutter.com).mp4',
+    r'C:\Users\USER\PycharmProjects\sandbox_project\media\IMG_5981 (online-video-cutter.com).mp4',
+    r'C:\Users\USER\PycharmProjects\sandbox_project\media\IMG_6156 (online-video-cutter.com).mp4',
+    r'C:\Users\USER\PycharmProjects\sandbox_project\media\IMG_6412 (online-video-cutter.com).mp4'
 ]
 
 # Замените 'YOUR_BOT_TOKEN' на токен вашего бота

@@ -2,7 +2,9 @@ import os
 from datetime import datetime
 
 # Путь к базе данных SQLite
-DATABASE_PATH = os.path.join(os.path.dirname(__file__), 'sqlite.db')
+
+DATABASE_PATH = r'C:\Users\USER\PycharmProjects\sandbox_project\sqlite.db'
+
 
 # Заголовки для выбора времени
 time_selection_headers = {

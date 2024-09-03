@@ -68,7 +68,36 @@ def generate_calendar_keyboard(month_offset=0, language='en'):
     start_weekday = first_of_month.weekday()
     current_date = first_of_month
 
-    # Заполняем календарь днями месяца
+    # # Заполняем календарь днями месяца
+    # for _ in range(5):
+    #     for day in range(len(calendar_buttons)):
+    #         if current_date.day == 1 and day < start_weekday:
+    #             calendar_buttons[day].append(InlineKeyboardButton(" ", callback_data='none'))
+    #         elif current_date > last_of_month:
+    #             calendar_buttons[day].append(InlineKeyboardButton(" ", callback_data='none'))
+    #         else:
+    #             if current_date <= today:
+    #                 calendar_buttons[day].append(InlineKeyboardButton(f"🔻 {current_date.day}", callback_data='none'))
+    #             else:
+    #                 calendar_buttons[day].append(InlineKeyboardButton(f" {current_date.day}",
+    #                                                                   callback_data=f'date_{current_date.strftime("%Y-%m-%d")}'))
+    #             current_date += timedelta(days=1)
+    #
+    # prev_month_button = InlineKeyboardButton("<",
+    #                                          callback_data=f"prev_month_{month_offset - 1}") if month_offset > -1 else InlineKeyboardButton(
+    #     " ", callback_data="none")
+    # next_month_button = InlineKeyboardButton(">",
+    #                                          callback_data=f"next_month_{month_offset + 1}") if month_offset < 2 else InlineKeyboardButton(
+    #     " ", callback_data="none")
+    #
+    # # Добавляем кнопки переключения месяцев в последнюю строку
+    # calendar_buttons.append([prev_month_button, next_month_button])
+    #
+    # return InlineKeyboardMarkup(calendar_buttons)
+
+
+
+    # Заполняем календарь днями месяца- это блок который вытармаживает
     for _ in range(5):
         for day in range(len(calendar_buttons)):
             if current_date.day == 1 and day < start_weekday:
@@ -151,6 +180,73 @@ def generate_time_selection_keyboard(language, stage='start', start_time=None):
     ] + rows
 
     return InlineKeyboardMarkup(keyboard)
+
+
+# # кнопки начала времени и конца времени с красными флажками и зазором в 5 часов
+# from reserved_date import is_slot_available  # Убедитесь, что импортируете правильно
+#
+# def generate_time_selection_keyboard(language, stage='start', start_time=None, date=None):
+#     start_time_dt = datetime.strptime('08:00', '%H:%M')
+#     end_time_dt = datetime.strptime('22:00', '%H:%M')
+#
+#     time_buttons = []
+#     current_time = start_time_dt
+#
+#     while current_time <= end_time_dt:
+#         time_str = current_time.strftime('%H:%M')
+#
+#         if stage == 'end' and start_time:
+#             start_time_dt = datetime.strptime(start_time, '%H:%M')
+#             if current_time < start_time_dt + timedelta(hours=2):
+#                 time_buttons.append(InlineKeyboardButton(f"🔻 {time_str}", callback_data='none'))
+#             else:
+#                 time_buttons.append(InlineKeyboardButton(f" {time_str}", callback_data=f'time_{time_str}'))
+#         else:
+#             # Проверяем доступность слота
+#             if not is_slot_available(date, time_str, (current_time + timedelta(minutes=30)).strftime('%H:%M')):
+#                 time_buttons.append(InlineKeyboardButton(f"🔻 {time_str}", callback_data='none'))
+#             else:
+#                 time_buttons.append(InlineKeyboardButton(f" {time_str}", callback_data=f'time_{time_str}'))
+#         current_time += timedelta(minutes=30)
+#
+#     num_buttons_per_row = 3
+#     rows = [time_buttons[i:i + num_buttons_per_row] for i in range(0, len(time_buttons), num_buttons_per_row)]
+#
+#     time_selection_headers = {
+#         'start': {
+#             'en': 'Planning to start around...',
+#             'ru': 'Планирую начать в...',
+#             'es': 'Planeo comenzar alrededor de...',
+#             'fr': 'Je prévois de commencer vers...',
+#             'uk': 'Планую почати о...',
+#             'pl': 'Planuję rozpocząć około...',
+#             'de': 'Ich plane zu beginnen um...',
+#             'it': 'Prevedo di iniziare intorno alle...'
+#         },
+#         'end': {
+#             'en': 'Planning to end around...',
+#             'ru': 'Планирую окончание около...',
+#             'es': 'Planeo terminar alrededor de...',
+#             'fr': 'Je prévois de terminer vers...',
+#             'uk': 'Планую закінчити приблизно о...',
+#             'pl': 'Planuję zakończyć około...',
+#             'de': 'Ich plane zu beenden um...',
+#             'it': 'Prevedo di finire intorno alle...'
+#         }
+#     }
+#     selection_text = time_selection_headers[stage].get(language, "Select start and end time (minimum duration 2 hours)")
+#
+#     keyboard = [
+#         [InlineKeyboardButton(selection_text, callback_data='none')]
+#     ] + rows
+#
+#     return InlineKeyboardMarkup(keyboard)
+#
+#
+
+
+
+
 
 def language_selection_keyboard():
     keyboard = [

@@ -14,23 +14,23 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from order_info_sender import send_order_info_to_admin, send_message_to_irina # функция отправки сообщений АдминБоту и Ирине
 
 
-# Обработчик текстовых сообщений
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_data = context.user_data.get('user_data', UserData())
-    context.user_data['user_data'] = user_data
-    step = user_data.get_step()
-
-    if step == 'greeting':
-        await handle_name(update, context)
-    elif step == 'preferences_request':
-        await handle_preferences(update, context)
-    elif step == 'city_request':
-        await handle_city(update, context)
-    else:
-        await update.message.reply_text(
-            get_translation(user_data, 'buttons_only'),  # Используем функцию для получения перевода
-            reply_markup=get_current_step_keyboard(step, user_data)
-        )
+# # Обработчик текстовых сообщений
+# async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+#     user_data = context.user_data.get('user_data', UserData())
+#     context.user_data['user_data'] = user_data
+#     step = user_data.get_step()
+#
+#     if step == 'greeting':
+#         await handle_name(update, context)
+#     elif step == 'preferences_request':
+#         await handle_preferences(update, context)
+#     elif step == 'city_request':
+#         await handle_city(update, context)
+#     else:
+#         await update.message.reply_text(
+#             get_translation(user_data, 'buttons_only'),  # Используем функцию для получения перевода
+#             reply_markup=get_current_step_keyboard(step, user_data)
+#         )
 
 from telegram import Update
 from telegram.ext import ContextTypes

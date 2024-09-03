@@ -1,5 +1,5 @@
 
-from calendar_reserve import reserved_date
+from calendar_reserve import reserved_date, check_date_reserved, reserved_month
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from datetime import datetime, timedelta
 import calendar
@@ -68,6 +68,8 @@ def generate_calendar_keyboard(month_offset=0, language='en'):
     start_weekday = first_of_month.weekday()
     current_date = first_of_month
 
+    date_list = reserved_month(current_date)
+
     # Заполняем календарь днями месяца
     for _ in range(5):
         for day in range(len(calendar_buttons)):
@@ -79,7 +81,8 @@ def generate_calendar_keyboard(month_offset=0, language='en'):
                 logging.info(f"Обработка даты: {current_date}")
 
                 # Вызов функции reserved_date для проверки количества заказов на дату
-                if current_date <= today or reserved_date(current_date):
+                # if current_date <= today or reserved_date(current_date):
+                if current_date <= today or check_date_reserved(current_date,date_list):
                     logging.info(f"Дата {current_date.date()} зарезервирована или прошла, добавляется 🔻")
                     day_text = to_superscript(str(current_date.day))
                     calendar_buttons[day].append(InlineKeyboardButton(f"🔻 {day_text}", callback_data='none'))

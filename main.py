@@ -297,7 +297,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await query.message.reply_text(
                 time_selection_headers['start'].get(user_data.get_language(),
                                                     "Select start and end time (minimum duration 2 hours)"),
-                reply_markup=generate_time_selection_keyboard(user_data.get_language(), 'start')
+                reply_markup=generate_time_selection_keyboard(user_data.get_language(), 'start', user_data.get_selected_date())
             )
 
         elif user_data.get_step() == 'order_sent':
@@ -353,18 +353,19 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             user_data.set_step('greeting')
             await start(update, context)
         elif user_data.get_step() == 'time_selection':
+            print(user_data.get_selected_date())
             user_data.clear_time()
             await query.message.reply_text(
                 time_selection_headers['start'].get(user_data.get_language(),
                                                     "Select start and end time (minimum duration 2 hours)"),
-                reply_markup=generate_time_selection_keyboard(user_data.get_language(), 'start')
+                reply_markup=generate_time_selection_keyboard(user_data.get_language(), 'start', user_data.get_selected_date())
             )
         elif user_data.get_step() == 'time_confirmation':
             user_data.clear_time()
             await query.message.reply_text(
                 time_selection_headers['start'].get(user_data.get_language(),
                                                     "Select start and end time (minimum duration 2 hours)"),
-                reply_markup=generate_time_selection_keyboard(user_data.get_language(), 'start')
+                reply_markup=generate_time_selection_keyboard(user_data.get_language(), 'start',user_data.get_selected_date())
             )
         elif user_data.get_step() == 'people_selection':
             await query.message.reply_text(
@@ -445,7 +446,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 time_set_texts['start_time'].get(user_data.get_language(),
                                                  'Start time set to {}. Now select end time.').format(selected_time),
                 reply_markup=generate_time_selection_keyboard(user_data.get_language(), 'end',
-                                                              user_data.get_start_time())
+                                                              user_data.get_selected_date(),user_data.get_start_time())
             )
 
         else:
@@ -487,7 +488,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await query.message.reply_text(
                     f"Minimum duration is 2 hours. Please select an end time at least 2 hours after the start time.",
                     reply_markup=generate_time_selection_keyboard(user_data.get_language(), 'end',
-                                                                  user_data.get_start_time())
+                                                                  user_data.get_selected_date(),user_data.get_start_time())
                 )
         await query.edit_message_reply_markup(
             reply_markup=disable_time_buttons(query.message.reply_markup, selected_time))

@@ -926,7 +926,9 @@ def get_current_step_keyboard(step, user_data):
         month_offset = user_data.get_month_offset() if hasattr(user_data, 'get_month_offset') else 0
         return generate_calendar_keyboard(month_offset, language)
     elif step == 'time_selection':
-        return generate_time_selection_keyboard(language, 'start')
+        print(user_data.get_selected_date())
+        print("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDd")
+        return generate_time_selection_keyboard(language, 'start', user_data.get_selected_date())
     elif step == 'people_selection':
         return generate_person_selection_keyboard(language)
     elif step == 'style_selection':

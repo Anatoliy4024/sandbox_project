@@ -112,34 +112,3 @@ def reserved_month(current_date):
 # print(check_date_reserved(datetime(2024,9,15,), date_list))
 
 
-
-    # это кусок кода утра 29_08_2024
-
-    # def reserved_date(current_date):
-#     # Создаем подключение к базе данных
-#     conn = sqlite3.connect(DATABASE_PATH)
-#     cursor = conn.cursor()
-#
-#     try:
-#         # Шаг 1: Вытаскиваем user_id из таблицы users, где статус равен 3
-#         cursor.execute("SELECT COUNT(user_id) FROM orders WHERE status > 2 AND selected_date = ?", (current_date.date()))
-#         user_info = cursor.fetchone()
-#
-#         if user_info is None:
-#             logging.error("No orders with status 3 found.")
-#             return
-#
-#         print(user_info)
-#
-#         number_of_orders = user_info[0]  # user_id из таблицы users
-#         if number_of_orders > 1:
-#             return True
-#
-#     except Exception as e:
-#         logging.error(f"Failed to send order info to admin bot or user: {e}")
-#         print(f"Принт: Ошибка при отправке сообщения: {e}")
-#
-#     finally:
-#         conn.close()
-#
-#     return False

@@ -3,6 +3,7 @@ from calendar_reserve import reserved_date, check_date_reserved, reserved_month
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 from datetime import datetime, timedelta
 import calendar
+from data_reserve import get_reserved_times_for_date
 
 import logging
 
@@ -82,7 +83,7 @@ def generate_calendar_keyboard(month_offset=0, language='en'):
 
                 # Вызов функции reserved_date для проверки количества заказов на дату
                 # if current_date <= today or reserved_date(current_date):
-                if current_date <= today or check_date_reserved(current_date,date_list):
+                if current_date <= today or check_date_reserved(current_date, date_list):
                     logging.info(f"Дата {current_date.date()} зарезервирована или прошла, добавляется 🔻")
                     day_text = to_superscript(str(current_date.day))
                     calendar_buttons[day].append(InlineKeyboardButton(f"🔻 {day_text}", callback_data='none'))
@@ -100,26 +101,48 @@ def generate_calendar_keyboard(month_offset=0, language='en'):
 
     return InlineKeyboardMarkup(calendar_buttons)
 
-def generate_time_selection_keyboard(language, stage='start', start_time=None):
+
+import logging
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from datetime import datetime, timedelta
+from data_reserve import check_time_reserved, get_reserved_times_for_date
+
+def generate_time_selection_keyboard(language, stage='start', selected_date=None, start_time=None):
     start_time_dt = datetime.strptime('08:00', '%H:%M')
     end_time_dt = datetime.strptime('22:00', '%H:%M')
+
+    # Получаем зарезервированные интервалы для выбранной даты
+    reserved_intervals = get_reserved_times_for_date(selected_date)
 
     time_buttons = []
     current_time = start_time_dt
 
     while current_time <= end_time_dt:
         time_str = current_time.strftime('%H:%M')
+        next_time = (current_time + timedelta(minutes=30)).strftime('%H:%M')
+
+        # Проверяем зарезервирован ли текущий интервал
         if stage == 'end' and start_time:
-            start_time_dt = datetime.strptime(start_time, '%H:%M')
-            if current_time < start_time_dt + timedelta(hours=2):
+            # start_time_dt = datetime.strptime(start_time, '%H:%M')
+            if check_time_reserved(current_time.strftime('%H:%M'), reserved_intervals):
+            # if check_time_reserved(time_str, next_time, reserved_intervals):
                 time_buttons.append(InlineKeyboardButton(f"🔻 {time_str}", callback_data='none'))
             else:
-                time_buttons.append(InlineKeyboardButton(f" {time_str}", callback_data=f'time_{time_str}'))
+                start_time_dt = datetime.strptime(start_time, '%H:%M')
+                if current_time < start_time_dt + timedelta(hours=2):
+                    time_buttons.append(InlineKeyboardButton(f"🔻 {time_str}", callback_data='none'))
+                else:
+                    time_buttons.append(InlineKeyboardButton(f" {time_str}", callback_data=f'time_{time_str}'))
         else:
-            if current_time >= datetime.strptime('20:30', '%H:%M'):
+            # if check_time_reserved(time_str, next_time, reserved_intervals):
+            if check_time_reserved(current_time.strftime('%H:%M'), reserved_intervals):
                 time_buttons.append(InlineKeyboardButton(f"🔻 {time_str}", callback_data='none'))
             else:
-                time_buttons.append(InlineKeyboardButton(f" {time_str}", callback_data=f'time_{time_str}'))
+                if current_time >= datetime.strptime('20:30', '%H:%M'):
+                    time_buttons.append(InlineKeyboardButton(f"🔻 {time_str}", callback_data='none'))
+                else:
+                    time_buttons.append(InlineKeyboardButton(f" {time_str}", callback_data=f'time_{time_str}'))
+
         current_time += timedelta(minutes=30)
 
     num_buttons_per_row = 3
@@ -147,6 +170,7 @@ def generate_time_selection_keyboard(language, stage='start', start_time=None):
             'it': 'Prevedo di finire intorno alle...'
         }
     }
+
     selection_text = time_selection_headers[stage].get(language, "Select start and end time (minimum duration 2 hours)")
 
     keyboard = [
@@ -154,6 +178,63 @@ def generate_time_selection_keyboard(language, stage='start', start_time=None):
     ] + rows
 
     return InlineKeyboardMarkup(keyboard)
+
+
+
+# def generate_time_selection_keyboard(language, stage='start', start_time=None):
+#     start_time_dt = datetime.strptime('08:00', '%H:%M')
+#     end_time_dt = datetime.strptime('22:00', '%H:%M')
+#
+#     time_buttons = []
+#     current_time = start_time_dt
+#
+#     while current_time <= end_time_dt:
+#         time_str = current_time.strftime('%H:%M')
+#         if stage == 'end' and start_time:
+#             start_time_dt = datetime.strptime(start_time, '%H:%M')
+#             if current_time < start_time_dt + timedelta(hours=2):
+#                 time_buttons.append(InlineKeyboardButton(f"🔻 {time_str}", callback_data='none'))
+#             else:
+#                 time_buttons.append(InlineKeyboardButton(f" {time_str}", callback_data=f'time_{time_str}'))
+#         else:
+#             if current_time >= datetime.strptime('20:30', '%H:%M'):
+#                 time_buttons.append(InlineKeyboardButton(f"🔻 {time_str}", callback_data='none'))
+#             else:
+#                 time_buttons.append(InlineKeyboardButton(f" {time_str}", callback_data=f'time_{time_str}'))
+#         current_time += timedelta(minutes=30)
+#
+#     num_buttons_per_row = 3
+#     rows = [time_buttons[i:i + num_buttons_per_row] for i in range(0, len(time_buttons), num_buttons_per_row)]
+#
+#     time_selection_headers = {
+#         'start': {
+#             'en': 'Planning to start around...',
+#             'ru': 'Планирую начать в...',
+#             'es': 'Planeo comenzar alrededor de...',
+#             'fr': 'Je prévois de commencer vers...',
+#             'uk': 'Планую почати о...',
+#             'pl': 'Planuję rozpocząć około...',
+#             'de': 'Ich plane zu beginnen um...',
+#             'it': 'Prevedo di iniziare intorno alle...'
+#         },
+#         'end': {
+#             'en': 'Planning to end around...',
+#             'ru': 'Планирую окончание около...',
+#             'es': 'Planeo terminar alrededor de...',
+#             'fr': 'Je prévois de terminer vers...',
+#             'uk': 'Планую закінчити приблизно о...',
+#             'pl': 'Planuję zakończyć około...',
+#             'de': 'Ich plane zu beenden um...',
+#             'it': 'Prevedo di finire intorno alle...'
+#         }
+#     }
+#     selection_text = time_selection_headers[stage].get(language, "Select start and end time (minimum duration 2 hours)")
+#
+#     keyboard = [
+#         [InlineKeyboardButton(selection_text, callback_data='none')]
+#     ] + rows
+#
+#     return InlineKeyboardMarkup(keyboard)
 
 def language_selection_keyboard():
     keyboard = [

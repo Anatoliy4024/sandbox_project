@@ -440,7 +440,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 (selected_time, user_data.get_user_id(), session_number),
                 user_data.get_user_id()
             )
-            time.sleep(1)  # Задержка перед повторной попыткой
+            # time.sleep(1.5)  # Задержка перед повторной попыткой
 
             await query.message.reply_text(
                 time_set_texts['start_time'].get(user_data.get_language(),
@@ -488,7 +488,7 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await query.message.reply_text(
                     f"Minimum duration is 2 hours. Please select an end time at least 2 hours after the start time.",
                     reply_markup=generate_time_selection_keyboard(user_data.get_language(), 'end',
-                                                                  user_data.get_selected_date(),user_data.get_start_time())
+                                                                  user_data.get_selected_date(), user_data.get_start_time())
                 )
         await query.edit_message_reply_markup(
             reply_markup=disable_time_buttons(query.message.reply_markup, selected_time))

@@ -11,7 +11,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 
 
-from order_info_sender import send_order_info_to_admin, send_message_to_irina # функция отправки сообщений АдминБоту и Ирине
+from order_info_sender import send_order_info_to_servis, send_message_to_admin # функция отправки сообщений АдминБоту и Ирине
 
 
 # Обработчик текстовых сообщений
@@ -774,6 +774,8 @@ async def show_proforma(update: Update, context: ContextTypes.DEFAULT_TYPE):
             cursor.execute(select_query, (user_id,))
             current_session = cursor.fetchone()[0]
 
+            user_data.set_session_number(current_session)
+
             if current_session is None:
                 logging.error(f"Ошибка обновления статуса в таблице orders для user_id {user_id}")
             else:
@@ -913,10 +915,10 @@ async def show_proforma(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(chat_id=update.effective_chat.id, text=proforma_text, reply_markup=reply_markup)
 
     # Вызов функции для отправки сообщения админботу
-    await send_order_info_to_admin(user_data.get_user_id(), user_data.get_session_number())
+    await send_order_info_to_servis(user_data.get_user_id(), user_data.get_session_number())
 
     # Вызов функции для отправки сообщения Ирине
-    await send_message_to_irina(user_data.get_user_id(), user_data.get_session_number())
+    await send_message_to_admin(user_data.get_user_id(), user_data.get_session_number())
 
 
     # Функция для получения текущей клавиатуры для шага

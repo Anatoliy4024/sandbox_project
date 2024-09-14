@@ -3,17 +3,24 @@ import logging
 from telegram import Bot
 from constants import DATABASE_PATH, ORDER_STATUS
 
-async def send_order_info_to_admin(user_id, session_num):
-    """Отправляет информацию о заказе админботу."""
+async def send_order_info_to_servis(user_id, session_num):
+    """Отправляет информацию о заказе Сервисной службе"""
 
     bot_token = '7495955549:AAGG0PQNvFC-SN0PO4rx0WVi2HEeIM8mnVg'  # Токен админбота
-    admin_chat_id = 542067858  # chat_id админбота
+    #admin_chat_id = 542067858  # chat_id админбота
+    admin_list = list()
 
     # Создаем подключение к базе данных
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
 
     try:
+        logging.info(f"Executing SELECT for user_id: {user_id}, session_number: {session_num}")
+        cursor.execute(
+            "SELECT user_id FROM users WHERE status = 2 "
+        )
+        admin_list = cursor.fetchall()
+
         logging.info(f"Executing SELECT for user_id: {user_id}, session_number: {session_num}")
         cursor.execute(
             "SELECT order_id, user_id, session_number, user_name, selected_date, start_time, end_time, duration,"
@@ -31,13 +38,13 @@ async def send_order_info_to_admin(user_id, session_num):
 
         # Формируем сообщение для отправки админботу
         admin_message = (
-            f"Привет твой id-542067858 соответствует\n"
+            f"Привет твой id соответствует\n"
             f"номеру Сервисной службы AdminPicnicsAlicanteBot\n"
             f"https://t.me/AssistPicnicsBot\n"
             f"Сейчас пришло сообщение от PicnicsAlicanteBot:\n"
                         f"____________________\n"
             f"ПРОФОРМА № {order_info[1]}_{order_info[2]}_3\n"
-            # f"Дата: {order_info[4]}\n"
+            f"Дата: {order_info[4]}\n"
             # f"Время: {order_info[5]} - {order_info[6]}\n"
             # f"Количество человек: {order_info[8]}\n"
             # f"Стиль: {order_info[9]}\n"
@@ -52,8 +59,11 @@ async def send_order_info_to_admin(user_id, session_num):
 
         # Отправляем сообщение админботу
         bot = Bot(token=bot_token)
-        await bot.send_message(chat_id=admin_chat_id, text=admin_message)
-        logging.info(f"Message sent to admin bot {admin_chat_id}.")
+        print(admin_list)
+        if admin_list:
+            for i in admin_list:
+                await bot.send_message(chat_id=i[0], text=admin_message)
+                logging.info(f"Message sent to admin bot {i[0]}.")
 
         # Обновляем статус ордера
         logging.info(f"Updating order status for user_id: {user_id}, session_number: {session_num}")
@@ -88,8 +98,8 @@ async def send_order_info_to_admin(user_id, session_num):
         logging.info(f"Database connection closed for user_id: {user_id}")
 
 
-async def send_message_to_irina(user_id, session_num):
-    """Отправляет информацию о заказе Ирине."""
+async def send_message_to_admin(user_id, session_num):
+    """Отправляет информацию о заказе Админу"""
 
     bot_token = '7495955549:AAGG0PQNvFC-SN0PO4rx0WVi2HEeIM8mnVg'  # Токен админбота
     irina_chat_id = 884649958  # chat_id Ирины
@@ -116,13 +126,13 @@ async def send_message_to_irina(user_id, session_num):
 
         # Формируем сообщение для отправки Ирине
         irina_message = (
-            f"Добрый день, Ирина!\n"
+            f"Добрый день!\n"
             f"Я - твой АдминБот\n"
             f"Есть новый заказ через\n"
             f"PicnicsAlicanteBot\n"
             f"____________________\n"
             f"ПРОФОРМА № {order_info[1]}_{order_info[2]}_3\n"
-            # f"Дата: {order_info[4]}\n"
+            f"Дата: {order_info[4]}\n"
             # f"Время: {order_info[5]} - {order_info[6]}\n"
             # f"Количество человек: {order_info[8]}\n"
             # f"Стиль: {order_info[9]}\n"
@@ -131,7 +141,7 @@ async def send_message_to_irina(user_id, session_num):
             f"____________________\n"
             f"\n"
             f"\n"
-            f"Можно открыть заказ с помощью кнопок меню. Если кнопок нет - жми /start"
+            f"Если не видно кнопок меню - жми /start"
 
         )
 
